@@ -11,9 +11,9 @@
 
 import assert from 'node:assert/strict'
 import {execFileSync} from 'node:child_process'
-import {existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs'
+import {existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
-import {join} from 'node:path'
+import {dirname, join} from 'node:path'
 import test from 'node:test'
 import {base, catalogue, site} from './site.mjs'
 
@@ -51,6 +51,23 @@ test('--render --chrome --site-chrome writes the docs header and the site header
     assert.deepEqual(size(join(out, 'assets/icons/icon-accent-512.png')), [512, 512])
     assert.deepEqual(size(join(out, 'assets/icons/apple-touch-icon.png')), [180, 180])
     assert.ok(existsSync(join(out, 'favicon.ico')))
+})
+
+test('--bundle replaces each bundle whole, by one rename, so a reader never sees one empty or half written', () => {
+    // The bug this proves fixed: esbuild wrote build/server.mjs in place, truncating it first, so
+    // render_test.mjs, importing it while dev_test.mjs's rebuild bundled again in the same npm
+    // test, once read it empty and failed in CI with "does not provide an export named 'Mark'".
+    // A file renamed onto the path is a new one, with an inode of its own; a file rewritten in
+    // place keeps its inode.
+    const bundles = ['build/server.mjs', 'build/client/site.js'].map(file => join(site, file))
+    const before = new Map(bundles.map(file => [file, statSync(file).ino]))
+    execFileSync(process.execPath, [build, '--bundle'], {stdio: 'inherit'})
+    for (const file of bundles) {
+        assert.notEqual(statSync(file).ino, before.get(file), `${file} is a new file`)
+        assert.deepEqual(readdirSync(dirname(file)).filter(entry => entry.endsWith('.next')), [],
+            `no file being written is left beside ${file}`)
+    }
+    assert.match(readFileSync(bundles[0], 'utf8'), /^export \{\n {2}Mark,$/m)
 })
 
 test("the client bundle carries the mark's drawing alone, never logo.svg's comments and licence", () => {

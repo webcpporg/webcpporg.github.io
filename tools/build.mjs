@@ -37,7 +37,7 @@
 // key, so no reader's browser and no build can reach them.
 
 import {execFileSync} from 'node:child_process'
-import {cp, mkdir, readdir, readFile, writeFile} from 'node:fs/promises'
+import {cp, mkdir, readdir, readFile, rename, writeFile} from 'node:fs/promises'
 import {dirname, join, relative, resolve} from 'node:path'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {parseArgs} from 'node:util'
@@ -86,6 +86,21 @@ const markDrawing = {
     },
 }
 
+/**
+ * Writes each of esbuild's output files beside its path, then moves it onto the path by one rename.
+ * Tip: esbuild writes in place, truncating first, and a test importing build/server.mjs while
+ * another process bundles (dev_test.mjs's rebuilds, in the same npm test) read it empty; a rename
+ * replaces the file whole, so a reader sees the old file or the new one, never part of either.
+ */
+async function writeWhole({outputFiles}) {
+    for (const {path, contents} of outputFiles) {
+        const next = `${path}.${process.pid}.next`
+        await mkdir(dirname(path), {recursive: true})
+        await writeFile(next, contents)
+        await rename(next, path)
+    }
+}
+
 async function bundle() {
     const esbuild = await import('esbuild')
     const common = {
@@ -95,23 +110,24 @@ async function bundle() {
         logLevel: 'warning',
         absWorkingDir: site,
         plugins: [withoutTelemetry, markDrawing],
+        write: false,
     }
-    await esbuild.build({
+    await writeWhole(await esbuild.build({
         ...common,
         entryPoints: ['src/server.tsx'],
         outfile: 'build/server.mjs',
         platform: 'node',
         format: 'esm',
         external: ['react', 'react-dom'],
-    })
-    await esbuild.build({
+    }))
+    await writeWhole(await esbuild.build({
         ...common,
         entryPoints: ['src/client.tsx'],
         outfile: 'build/client/site.js',
         platform: 'browser',
         format: 'esm',
         minify: true,
-    })
+    }))
 }
 
 /** Every `.oui` file under `directory`, as paths relative to it, sorted. */
