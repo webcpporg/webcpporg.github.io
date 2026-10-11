@@ -1,0 +1,1194 @@
+<!--
+Copyright (c) 2026 WebCpp.org
+
+Distributed under the Boost Software License, Version 1.0. (See
+accompanying file LICENSE_1_0.txt or copy at
+https://www.boost.org/LICENSE_1_0.txt)
+
+The home page redesigned, with the three logo concepts of design/logo-*.svg, for the owner's
+choice (Task 8, gate G3). One self-contained page: no font, image or script is fetched. The home
+is drawn twice, at 360 and at 1280 px, each in a frame scaled to fit the window, and laid out by
+container queries on its own width where the site will use media queries on the window's.
+-->
+<!doctype html>
+<html lang="en" data-logo="a">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>webcpp home mockup</title>
+<style>
+/* The tokens: the site's light set here, its dark set below; one accent, a violet. */
+:root {
+    color-scheme: light dark;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --background: #ffffff;
+    --surface: #f5f5f7;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --rule: #d2d2d7;
+    /* The accent as text on the background: 6.6 to 1 on white. */
+    --accent: #5b3fd9;
+    /* The accent as a fill under white text: 6.6 to 1 in light, 5.9 to 1 in dark. */
+    --accent-fill: #5b3fd9;
+    --on-accent: #ffffff;
+    /* The mockup's own page around the frames. */
+    --canvas: #f5f5f7;
+    --frame: #d2d2d7;
+    --mark-ink: var(--text);
+    --mark-acc: var(--accent);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --background: #000000;
+        --surface: #1c1c1e;
+        --text: #f5f5f7;
+        --muted: #a1a1a6;
+        --rule: #38383a;
+        /* 7.6 to 1 on black. */
+        --accent: #9d8cff;
+        --accent-fill: #6246ea;
+        --canvas: #1c1c1e;
+        --frame: #48484a;
+    }
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --background: #000000;
+    --surface: #1c1c1e;
+    --text: #f5f5f7;
+    --muted: #a1a1a6;
+    --rule: #38383a;
+    --accent: #9d8cff;
+    --accent-fill: #6246ea;
+    --canvas: #1c1c1e;
+    --frame: #48484a;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--text);
+    font: 17px/1.5 var(--font);
+    overflow-wrap: break-word;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+svg.mark {
+    display: block;
+    flex: none;
+    overflow: visible;
+}
+
+/* ---- The mockup's own page: what it shows, the controls, the concepts. ---- */
+
+.sheet {
+    max-width: 1680px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+}
+
+.intro h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.intro p {
+    max-width: 64ch;
+    margin: 0 0 20px;
+    color: var(--muted);
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin: 0 0 24px;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.toggle legend {
+    float: left;
+    padding: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.toggle .options {
+    display: flex;
+    padding: 3px;
+    border-radius: 980px;
+    background: var(--background);
+    box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.toggle button {
+    padding: 5px 14px;
+    border: 0;
+    border-radius: 980px;
+    background: none;
+    color: var(--text);
+    font: 500 14px/1.4 var(--font);
+    cursor: pointer;
+}
+
+.toggle button[aria-pressed="true"] {
+    background: var(--accent-fill);
+    color: var(--on-accent);
+}
+
+/* The concepts: one column each, the chosen one outlined. */
+
+.concepts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 0 0 40px;
+    padding: 0;
+    list-style: none;
+}
+
+.concept {
+    display: grid;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 20px;
+    background: var(--background);
+    box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.concept[aria-current="true"] {
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.concept-head {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.concept h2 {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.25;
+}
+
+.concept p {
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.concept .choose {
+    justify-self: start;
+    padding: 6px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 980px;
+    background: none;
+    color: var(--accent);
+    font: 500 14px/1.4 var(--font);
+    cursor: pointer;
+}
+
+.concept[aria-current="true"] .choose {
+    border-color: var(--accent-fill);
+    background: var(--accent-fill);
+    color: var(--on-accent);
+}
+
+.swatch-label {
+    margin: 0 0 6px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* The favicon at its own 16 px, in a browser's tab, light and dark, two colours and one. */
+
+.tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 9px 9px 0 0;
+    font: 12px/1 var(--font);
+}
+
+.tab.on-light {
+    --mark-ink: #1d1d1f;
+    --mark-acc: #5b3fd9;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px #d2d2d7;
+    color: #1d1d1f;
+}
+
+.tab.on-dark {
+    --mark-ink: #f5f5f7;
+    --mark-acc: #9d8cff;
+    background: #2c2c2e;
+    color: #f5f5f7;
+}
+
+.tab.one-colour {
+    --mark-acc: var(--mark-ink);
+}
+
+/* The app icon, 512 px drawn at 96: on the accent in one colour, on white and black in two. */
+
+.icons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.icon {
+    display: grid;
+    place-items: center;
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+}
+
+.icon svg.mark {
+    width: 60px;
+    height: 60px;
+}
+
+.icon.on-accent {
+    --mark-ink: #ffffff;
+    --mark-acc: #ffffff;
+    background: #5b3fd9;
+}
+
+.icon.on-white {
+    --mark-ink: #1d1d1f;
+    --mark-acc: #5b3fd9;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px #d2d2d7;
+}
+
+.icon.on-black {
+    --mark-ink: #f5f5f7;
+    --mark-acc: #9d8cff;
+    background: #000000;
+    box-shadow: inset 0 0 0 1px #38383a;
+}
+
+/*
+ * The frames: the home at 360 and 1280 px, side by side once there is room, each zoomed by the
+ * ratio of the room to its width. tan(atan2(a, b)) is a / b as a plain number, the factor zoom
+ * takes, so that no script measures the window.
+ */
+
+.sheet {
+    container: stage / inline-size;
+}
+
+.frames {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.frame figcaption {
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.device {
+    overflow: hidden;
+    border-radius: 28px;
+    background: var(--background);
+    box-shadow: 0 0 0 1px var(--frame);
+}
+
+.device.phone {
+    width: 360px;
+    zoom: min(1, tan(atan2(100cqi, 362px)));
+}
+
+.device.desktop {
+    width: 1280px;
+    border-radius: 12px;
+    zoom: tan(atan2(100cqi, 1282px));
+}
+
+@container stage (min-width: 720px) {
+    .frames {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 24px;
+    }
+
+    .device.phone,
+    .device.desktop {
+        zoom: min(1, tan(atan2(100cqi - 24px, 1644px)));
+    }
+}
+
+@container stage (min-width: 900px) {
+    .concepts {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ---- The home, as the site will draw it; its breakpoints are on its own width. ---- */
+
+.home {
+    container: home / inline-size;
+    --gutter: 16px;
+    --measure: 1120px;
+    background: var(--background);
+    color: var(--text);
+    font: 17px/1.5 var(--font);
+}
+
+.home .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 12px var(--gutter);
+}
+
+.home .brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text);
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.home .brand:hover {
+    text-decoration: none;
+}
+
+.home .brand svg.mark {
+    width: 28px;
+    height: 28px;
+}
+
+.home .site-nav {
+    display: none;
+    gap: 22px;
+    font-size: 14px;
+}
+
+.home .site-nav a {
+    color: var(--text);
+}
+
+.home .site-nav a:hover {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+/* On a phone the navigation folds into a menu, which opens without a script. */
+
+.home .menu {
+    position: relative;
+}
+
+.home .menu summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 2px;
+    color: var(--text);
+    font-size: 15px;
+    list-style: none;
+    cursor: pointer;
+}
+
+.home .menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.home .menu summary svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+}
+
+.home .menu-list {
+    position: absolute;
+    right: 0;
+    z-index: 1;
+    display: grid;
+    min-width: 200px;
+    margin-top: 8px;
+    padding: 8px 0;
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--rule);
+}
+
+.home .menu-list a {
+    padding: 8px 20px;
+    color: var(--text);
+}
+
+.home .band {
+    margin: 0;
+    padding: 6px var(--gutter);
+    border-block: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+.home .band code {
+    font-family: var(--mono);
+    font-size: 0.92em;
+}
+
+.home .main {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+}
+
+/* The hero: the logo large, its two parts meeting once as the page opens, then the headline. */
+
+.home .hero {
+    display: grid;
+    gap: 28px;
+    padding: 40px 0 56px;
+}
+
+.home .hero svg.mark {
+    width: 96px;
+    height: 96px;
+}
+
+.home h1,
+.home h2,
+.home .door {
+    text-wrap: balance;
+}
+
+.home p {
+    text-wrap: pretty;
+}
+
+.home .hero h1 {
+    margin: 0 0 16px;
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+}
+
+.home .hero .lede {
+    max-width: 34em;
+    margin: 0 0 28px;
+    color: var(--muted);
+    font-size: 19px;
+    line-height: 1.4;
+}
+
+.home .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.home .button {
+    padding: 11px 22px;
+    border-radius: 980px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.home .button:hover {
+    text-decoration: none;
+}
+
+.home .button.primary {
+    background: var(--accent-fill);
+    color: var(--on-accent);
+}
+
+.home .button.secondary {
+    box-shadow: inset 0 0 0 1px var(--accent);
+    color: var(--accent);
+}
+
+.meet use[data-part="ink"] {
+    animation: meet-ink 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.meet use[data-part="acc"] {
+    animation: meet-acc 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes meet-ink {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+}
+
+@keyframes meet-acc {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .meet use {
+        animation: none;
+    }
+}
+
+.home section {
+    padding: 48px 0;
+    border-top: 1px solid var(--rule);
+}
+
+.home h2 {
+    margin: 0 0 12px;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+}
+
+.home section > p {
+    max-width: 60ch;
+    margin: 0 0 28px;
+    color: var(--muted);
+}
+
+/*
+ * The targets: one rail runs through the three, the same code reaching each; down the left on a
+ * phone, across the top on a wide screen.
+ */
+
+.home .targets {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.home .targets li {
+    position: relative;
+    padding: 0 0 28px 32px;
+}
+
+.home .targets li:last-child {
+    padding-bottom: 0;
+}
+
+.home .targets li::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 0;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.home .targets li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 19px;
+    bottom: -8px;
+    left: 5px;
+    width: 1px;
+    background: var(--rule);
+}
+
+.home .targets strong {
+    display: block;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.home .targets p {
+    margin: 2px 0 0;
+    color: var(--muted);
+}
+
+/* The doors: three large lines, each a link as wide as the page. */
+
+.home .doors {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.home .doors a {
+    display: grid;
+    gap: 4px;
+    padding: 20px 0;
+    color: var(--text);
+}
+
+.home .doors li + li a {
+    border-top: 1px solid var(--rule);
+}
+
+.home .doors a:hover {
+    text-decoration: none;
+}
+
+.home .doors a:hover .door {
+    color: var(--accent);
+}
+
+.home .door {
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.home .doors p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.home .examples {
+    padding: 28px 24px;
+    border-radius: 24px;
+    background: var(--surface);
+}
+
+.home section.last {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.home .examples h2 {
+    margin-bottom: 12px;
+}
+
+.home .examples p {
+    max-width: 60ch;
+    margin: 0 0 16px;
+    color: var(--muted);
+}
+
+.home .site-footer {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 0 var(--gutter) 40px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.home .site-footer p {
+    margin: 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+}
+
+@container home (min-width: 768px) {
+    .home {
+        --gutter: 32px;
+    }
+
+    .home .site-nav {
+        display: flex;
+    }
+
+    .home .menu {
+        display: none;
+    }
+
+    .home .hero {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 48px;
+        padding: 72px 0 88px;
+    }
+
+    .home .hero .mark-wrap {
+        order: 1;
+    }
+
+    .home .hero svg.mark {
+        width: 200px;
+        height: 200px;
+    }
+
+    .home .hero h1 {
+        font-size: 64px;
+    }
+
+    .home .hero .lede {
+        font-size: 22px;
+    }
+
+    .home section {
+        padding: 64px 0;
+    }
+
+    .home h2 {
+        font-size: 36px;
+    }
+
+    .home .targets {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+    }
+
+    .home .targets li {
+        padding: 32px 0 0;
+    }
+
+    .home .targets li::before {
+        top: 0;
+    }
+
+    .home .targets li:not(:last-child)::after {
+        top: 5px;
+        right: -32px;
+        bottom: auto;
+        left: 11px;
+        width: auto;
+        height: 1px;
+    }
+
+    .home .doors a {
+        grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+        align-items: baseline;
+        gap: 32px;
+        padding: 28px 0;
+    }
+
+    .home .door {
+        font-size: 36px;
+    }
+
+    .home .doors p {
+        font-size: 19px;
+    }
+
+    .home .examples {
+        padding: 48px;
+        border-radius: 32px;
+    }
+}
+
+@container home (min-width: 1280px) {
+    .home {
+        --gutter: 48px;
+    }
+
+    .home .hero {
+        padding: 96px 0 112px;
+    }
+
+    .home .hero svg.mark {
+        width: 260px;
+        height: 260px;
+    }
+
+    .home .hero h1 {
+        font-size: 84px;
+    }
+
+    .home .hero .lede {
+        font-size: 24px;
+    }
+}
+</style>
+</head>
+<body>
+
+<!--
+The three marks, each as two parts, the ink's and the accent's, so that one colour or two is a
+matter of two custom properties, and the hero can bring its two parts together.
+-->
+<svg class="sprite" aria-hidden="true" focusable="false">
+    <defs>
+        <mask id="c-w-under" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+            <rect width="64" height="64" fill="#fff"/>
+            <path d="M28.73 18.5A15 15 0 0 1 34.3 23.14" fill="none" stroke="#000" stroke-width="10"/>
+        </mask>
+        <mask id="c-c-under" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+            <rect width="64" height="64" fill="#fff"/>
+            <path d="M32.45 46.54A7.5 15 0 0 1 28.53 41.58" fill="none" stroke="#000" stroke-width="10"/>
+        </mask>
+    </defs>
+    <symbol id="mark-a-ink" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="26.5" fill="none" stroke-width="5" style="stroke: var(--mark-ink)"/>
+    </symbol>
+    <symbol id="mark-a-acc" viewBox="0 0 64 64">
+        <g fill="none" stroke-width="5" style="stroke: var(--mark-acc)">
+            <ellipse cx="32" cy="32" rx="11" ry="26.5"/>
+            <path d="M14 32H28M36 32H50"/>
+        </g>
+    </symbol>
+    <symbol id="mark-b-ink" viewBox="0 0 64 64">
+        <path d="M27 8C21 8 19 10 19 15V20M19 44V49C19 54 21 56 27 56M37 8C43 8 45 10 45 15V20M45 44V49C45 54 43 56 37 56" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--mark-ink)"/>
+    </symbol>
+    <symbol id="mark-b-acc" viewBox="0 0 64 64">
+        <path d="M19 20L7 32L19 44M45 20L57 32L45 44" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--mark-acc)"/>
+    </symbol>
+    <symbol id="mark-c-ink" viewBox="0 0 64 64">
+        <path d="M35.19 24.5A15 15 0 1 0 30.26 44.65" mask="url(#c-c-under)" fill="none" stroke-width="5.5" stroke-linecap="round" style="stroke: var(--mark-ink)"/>
+    </symbol>
+    <symbol id="mark-c-acc" viewBox="0 0 64 64">
+        <path d="M26.8 32A15 15 0 0 1 56.8 32A7.5 15 0 0 1 41.8 32A7.5 15 0 0 1 26.8 32Z" mask="url(#c-w-under)" fill="none" stroke-width="5.5" stroke-linejoin="round" style="stroke: var(--mark-acc)"/>
+    </symbol>
+</svg>
+
+<div class="sheet">
+    <header class="intro">
+        <h1>webcpp home mockup</h1>
+        <p>Three logos for webcpp, each joining a sign of C++ with a sign of the web, and the home
+        page redesigned around the one chosen: the same content as today's, at 360&nbsp;px and at 1280&nbsp;px.
+        Choose a logo to see it in the home.</p>
+        <div class="controls">
+            <fieldset class="toggle">
+                <legend>Logo</legend>
+                <div class="options">
+                    <button type="button" data-set-logo="a" aria-pressed="true">a, globe</button>
+                    <button type="button" data-set-logo="b" aria-pressed="false">b, brackets</button>
+                    <button type="button" data-set-logo="c" aria-pressed="false">c, rings</button>
+                </div>
+            </fieldset>
+            <fieldset class="toggle">
+                <legend>Theme</legend>
+                <div class="options">
+                    <button type="button" data-set-theme="auto" aria-pressed="true">Auto</button>
+                    <button type="button" data-set-theme="light" aria-pressed="false">Light</button>
+                    <button type="button" data-set-theme="dark" aria-pressed="false">Dark</button>
+                </div>
+            </fieldset>
+        </div>
+    </header>
+
+    <ul class="concepts">
+        <li class="concept" data-concept="a" aria-current="true">
+            <div class="concept-head">
+                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>
+                <div>
+                    <h2>a. The globe</h2>
+                    <p>The web's globe, whose two meridians are the upright strokes of C++'s two plus signs.</p>
+                </div>
+            </div>
+            <div>
+                <p class="swatch-label">Favicon, 16 px</p>
+                <div class="tabs">
+                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>webcpp</span>
+                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>webcpp</span>
+                </div>
+            </div>
+            <div>
+                <p class="swatch-label">App icon, 512 px, drawn at 96</p>
+                <div class="icons">
+                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg></span>
+                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg></span>
+                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg></span>
+                </div>
+            </div>
+            <button type="button" class="choose" data-set-logo="a">Show in the home</button>
+        </li>
+        <li class="concept" data-concept="b" aria-current="false">
+            <div class="concept-head">
+                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>
+                <div>
+                    <h2>b. The brackets</h2>
+                    <p>C++'s braces, whose middle points open into the web's angle brackets: each pair one stroke.</p>
+                </div>
+            </div>
+            <div>
+                <p class="swatch-label">Favicon, 16 px</p>
+                <div class="tabs">
+                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>webcpp</span>
+                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>webcpp</span>
+                </div>
+            </div>
+            <div>
+                <p class="swatch-label">App icon, 512 px, drawn at 96</p>
+                <div class="icons">
+                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg></span>
+                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg></span>
+                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg></span>
+                </div>
+            </div>
+            <button type="button" class="choose" data-set-logo="b">Show in the home</button>
+        </li>
+        <li class="concept" data-concept="c" aria-current="false">
+            <div class="concept-head">
+                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>
+                <div>
+                    <h2>c. The rings</h2>
+                    <p>Two linked rings, as the web's link is drawn: a C for C++, and a ring closing over a W for the web.</p>
+                </div>
+            </div>
+            <div>
+                <p class="swatch-label">Favicon, 16 px</p>
+                <div class="tabs">
+                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>webcpp</span>
+                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>webcpp</span>
+                </div>
+            </div>
+            <div>
+                <p class="swatch-label">App icon, 512 px, drawn at 96</p>
+                <div class="icons">
+                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg></span>
+                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg></span>
+                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg></span>
+                </div>
+            </div>
+            <button type="button" class="choose" data-set-logo="c">Show in the home</button>
+        </li>
+    </ul>
+
+    <!-- The two homes are pictures of the site, so their header, navigation, main and footer are plain elements: the mockup's landmarks are its own. -->
+    <div class="frames">
+        <figure class="frame" style="margin: 0">
+            <figcaption>360 px, a phone</figcaption>
+            <div class="device phone">
+                <div class="home">
+                    <div class="site-header">
+                        <a class="brand" href="#home"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-a-ink"/><use data-part="acc" href="#mark-a-acc"/></svg>webcpp</a>
+                        <details class="menu">
+                            <summary><svg viewBox="0 0 18 18" fill="none" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 5H16M2 9H16M2 13H16"/></svg>Menu</summary>
+                            <div class="menu-list">
+                                <a href="#libraries">Libraries</a>
+                                <a href="#cpp">C++</a>
+                                <a href="#javascript">JavaScript</a>
+                                <a href="#ai">AI</a>
+                                <a href="#examples">Examples</a>
+                                <a href="#report">Report</a>
+                                <a href="#community">Community</a>
+                                <a href="#search">Search</a>
+                            </div>
+                        </details>
+                    </div>
+                    <p class="band">Preview of main at <code>b6caf67</code>, 2026-10-11</p>
+                    <div class="main">
+                        <div class="hero">
+                            <div class="mark-wrap"><svg class="mark meet" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-a-ink"/><use data-part="acc" href="#mark-a-acc"/></svg></div>
+                            <div>
+                                <h1>Where C++ and the web meet</h1>
+                                <p class="lede">webcpp brings the best of C++ to the web, and the libraries web developers use most to C++, for everyone who builds decentralized applications.</p>
+                                <div class="actions">
+                                    <a class="button primary" href="#libraries">See the libraries</a>
+                                    <a class="button secondary" href="#cpp">Get started</a>
+                                </div>
+                            </div>
+                        </div>
+                        <section>
+                            <h2>The same code, wherever it runs</h2>
+                            <p>Each library is header-only C++20, built and tested with b2 on every target it declares. Each target has its purpose:</p>
+                            <ul class="targets">
+                                <li><strong>The browser</strong><p>Compiled to WebAssembly with Emscripten, beside the page's JavaScript.</p></li>
+                                <li><strong>A server</strong><p>As a WASI component in a WebAssembly container, run by wasmtime or a cloud.</p></li>
+                                <li><strong>Native</strong><p>Compiled by your own compiler, as any C++ library is.</p></li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h2>Where to start</h2>
+                            <ul class="doors">
+                                <li><a href="#cpp"><span class="door">For C++ developers</span><p>Getting started, building for each target, and every library's page.</p></a></li>
+                                <li><a href="#javascript"><span class="door">For JavaScript developers</span><p>What builds for the browser today, and what is coming: C++ called from JavaScript, and back.</p></a></li>
+                                <li><a href="#ai"><span class="door">For AI developers</span><p>llms.txt and libraries.json, the catalogue for agents, and the integrations to come.</p></a></li>
+                            </ul>
+                        </section>
+                        <section class="last">
+                            <div class="examples">
+                                <h2>Examples</h2>
+                                <p>The first example comes with the visualizer: a calculator whose C++ runs in the browser, each step shown as it runs, from the JavaScript that calls into WebAssembly to the C++ inside it. The examples page lists what follows it.</p>
+                                <a href="#examples">What is coming</a>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="site-footer">
+                        <p>webcpp is free software, under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License 1.0</a>. Its source is <a href="https://github.com/webcpporg/webcpp">on GitHub</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </figure>
+        <figure class="frame" style="margin: 0">
+            <figcaption>1280 px, a desktop</figcaption>
+            <div class="device desktop">
+                <div class="home">
+                    <div class="site-header">
+                        <a class="brand" href="#home"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-a-ink"/><use data-part="acc" href="#mark-a-acc"/></svg>webcpp</a>
+                        <div class="site-nav">
+                            <a href="#libraries">Libraries</a>
+                            <a href="#cpp">C++</a>
+                            <a href="#javascript">JavaScript</a>
+                            <a href="#ai">AI</a>
+                            <a href="#examples">Examples</a>
+                            <a href="#report">Report</a>
+                            <a href="#community">Community</a>
+                            <a href="#search">Search</a>
+                        </div>
+                    </div>
+                    <p class="band">Preview of main at <code>b6caf67</code>, 2026-10-11</p>
+                    <div class="main">
+                        <div class="hero">
+                            <div class="mark-wrap"><svg class="mark meet" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-a-ink"/><use data-part="acc" href="#mark-a-acc"/></svg></div>
+                            <div>
+                                <h1>Where C++ and the web meet</h1>
+                                <p class="lede">webcpp brings the best of C++ to the web, and the libraries web developers use most to C++, for everyone who builds decentralized applications.</p>
+                                <div class="actions">
+                                    <a class="button primary" href="#libraries">See the libraries</a>
+                                    <a class="button secondary" href="#cpp">Get started</a>
+                                </div>
+                            </div>
+                        </div>
+                        <section>
+                            <h2>The same code, wherever it runs</h2>
+                            <p>Each library is header-only C++20, built and tested with b2 on every target it declares. Each target has its purpose:</p>
+                            <ul class="targets">
+                                <li><strong>The browser</strong><p>Compiled to WebAssembly with Emscripten, beside the page's JavaScript.</p></li>
+                                <li><strong>A server</strong><p>As a WASI component in a WebAssembly container, run by wasmtime or a cloud.</p></li>
+                                <li><strong>Native</strong><p>Compiled by your own compiler, as any C++ library is.</p></li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h2>Where to start</h2>
+                            <ul class="doors">
+                                <li><a href="#cpp"><span class="door">For C++ developers</span><p>Getting started, building for each target, and every library's page.</p></a></li>
+                                <li><a href="#javascript"><span class="door">For JavaScript developers</span><p>What builds for the browser today, and what is coming: C++ called from JavaScript, and back.</p></a></li>
+                                <li><a href="#ai"><span class="door">For AI developers</span><p>llms.txt and libraries.json, the catalogue for agents, and the integrations to come.</p></a></li>
+                            </ul>
+                        </section>
+                        <section class="last">
+                            <div class="examples">
+                                <h2>Examples</h2>
+                                <p>The first example comes with the visualizer: a calculator whose C++ runs in the browser, each step shown as it runs, from the JavaScript that calls into WebAssembly to the C++ inside it. The examples page lists what follows it.</p>
+                                <a href="#examples">What is coming</a>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="site-footer">
+                        <p>webcpp is free software, under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License 1.0</a>. Its source is <a href="https://github.com/webcpporg/webcpp">on GitHub</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </figure>
+    </div>
+</div>
+
+<script>
+/**
+ * The two toggles: which logo the home shows, and the theme; the hero's mark meets again on a change.
+ */
+const root = document.documentElement
+
+function press(attribute, value) {
+    for (const button of document.querySelectorAll(`.toggle [${attribute}]`)) {
+        button.setAttribute('aria-pressed', String(button.getAttribute(attribute) === value))
+    }
+}
+
+function setLogo(logo) {
+    root.dataset.logo = logo
+    for (const use of document.querySelectorAll('use[data-part]')) {
+        use.setAttribute('href', `#mark-${logo}-${use.dataset.part}`)
+    }
+    for (const concept of document.querySelectorAll('.concept')) {
+        concept.setAttribute('aria-current', String(concept.dataset.concept === logo))
+    }
+    for (const mark of document.querySelectorAll('.meet')) {
+        mark.classList.remove('meet')
+        void mark.getBoundingClientRect()
+        mark.classList.add('meet')
+    }
+    press('data-set-logo', logo)
+}
+
+function setTheme(theme) {
+    if (theme === 'auto') {
+        delete root.dataset.theme
+    } else {
+        root.dataset.theme = theme
+    }
+    press('data-set-theme', theme)
+}
+
+document.addEventListener('click', event => {
+    const logo = event.target.closest('[data-set-logo]')
+    if (logo) {
+        setLogo(logo.dataset.setLogo)
+    }
+    const theme = event.target.closest('[data-set-theme]')
+    if (theme) {
+        setTheme(theme.dataset.setTheme)
+    }
+})
+</script>
+</body>
+</html>

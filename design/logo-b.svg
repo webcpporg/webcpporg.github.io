@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title">
+<!--
+  Copyright (c) 2026 WebCpp.org
+
+  Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file LICENSE_1_0.txt or copy at
+  https://www.boost.org/LICENSE_1_0.txt)
+
+  Concept b, for the owner's choice (Task 8): C++'s braces, { and }, whose middle points open
+  into the web's angle brackets, < and >; each pair is one stroke, the two signs met.
+  Two colours: the braces' hooks in ink, the angle brackets in the accent.
+-->
+<title id="title">webcpp</title>
+<style>
+.ink { stroke: #1d1d1f; }
+.acc { stroke: #5b3fd9; }
+@media (prefers-color-scheme: dark) {
+  .ink { stroke: #f5f5f7; }
+  .acc { stroke: #9d8cff; }
+}
+</style>
+<g fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+  <path class="ink" d="M27 8C21 8 19 10 19 15V20M19 44V49C19 54 21 56 27 56M37 8C43 8 45 10 45 15V20M45 44V49C45 54 43 56 37 56"/>
+  <path class="acc" d="M19 20L7 32L19 44M45 20L57 32L45 44"/>
+</g>
+</svg>
