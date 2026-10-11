@@ -25,7 +25,7 @@ import {execFileSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
 import {existsSync, watch} from 'node:fs'
 import {cp, mkdir, readdir, readFile, readlink, rename, rm, symlink, writeFile} from 'node:fs/promises'
-import {dirname, join, relative, resolve, sep} from 'node:path'
+import {basename, dirname, join, relative, resolve, sep} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {defaultPort, host, serve} from './serve.mjs'
 
@@ -114,23 +114,46 @@ export async function exampleWasm({local, cache, base = preview, fetch = globalT
  * POSIX renames a link onto another atomically, so link is never briefly gone; Windows renames no
  * link onto one that is already there, so it is removed first, a real (if short) gap, which
  * serve.mjs's own retry is for. Returns the previous target, absolute, or null for none.
+ *
+ * Tip: a `${link}.next-<pid>` left by a run that crashed between creating it and the final rename
+ * is cleaned up first, so it never piles up across runs; and when `link` itself exists but is not
+ * a symlink, it is an earlier layout's build output (dev.mjs once built straight into it), never a
+ * target this function swapped in, so it is disposable and removed outright rather than renamed
+ * onto, which rename(2) refuses with EISDIR for a non-empty directory.
  */
 export async function pointTo(link, target) {
-    const previous = await readlink(link).catch(() => null)
-    const next = `${link}.next-${process.pid}`
-    await rm(next, {recursive: true, force: true})
-    try {
-        await symlink(target, next, 'dir')
-    } catch (error) {
-        if (process.platform !== 'win32') {
-            throw error
+    const dir = dirname(link)
+    const prefix = `${basename(link)}.next-`
+    for (const entry of await readdir(dir).catch(() => [])) {
+        if (entry.startsWith(prefix)) {
+            await rm(join(dir, entry), {recursive: true, force: true})
         }
-        await symlink(target, next, 'junction')
     }
-    if (process.platform === 'win32' && existsSync(link)) {
+    const previous = await readlink(link).catch(() => null)
+    if (previous === null && existsSync(link)) {
         await rm(link, {recursive: true, force: true})
     }
-    await rename(next, link)
+    const next = `${link}.next-${process.pid}`
+    let linked = false
+    try {
+        try {
+            await symlink(target, next, 'dir')
+        } catch (error) {
+            if (process.platform !== 'win32') {
+                throw error
+            }
+            await symlink(target, next, 'junction')
+        }
+        if (process.platform === 'win32' && existsSync(link)) {
+            await rm(link, {recursive: true, force: true})
+        }
+        await rename(next, link)
+        linked = true
+    } finally {
+        if (!linked) {
+            await rm(next, {recursive: true, force: true})
+        }
+    }
     return previous
 }
 

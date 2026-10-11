@@ -10,10 +10,11 @@
 // with a 404.
 
 import assert from 'node:assert/strict'
-import {mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs'
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs'
+import {lstat, readdir, symlink} from 'node:fs/promises'
 import {request} from 'node:http'
 import {tmpdir} from 'node:os'
-import {join} from 'node:path'
+import {dirname, join} from 'node:path'
 import test from 'node:test'
 import {build, pointTo} from '../tools/dev.mjs'
 import {serve} from '../tools/serve.mjs'
@@ -66,4 +67,28 @@ test("a request fired in every gap of dev's own rebuild still gets the site, nev
         seen.push([step, answer.status])
     })
     assert.deepEqual(seen, [['built', 200], ['linked', 200], ['cleaned', 200]], seen)
+})
+
+test('build recovers when `out` is a real directory left by an earlier layout, and cleans a stale next link', async () => {
+    // The bug this proves fixed: before 469b093, dev.mjs built straight into `out`, a real
+    // directory. A checkout upgraded from that layout still has `out` as a real, non-empty
+    // directory; renaming a symlink onto one fails with EISDIR (reproduced running npm run dev
+    // against such a checkout), so every build since has failed, leaving a stale `out.next-<pid>`
+    // link behind each time it did.
+    const work = mkdtempSync(join(tmpdir(), 'webcpp-dev-migrate-'))
+    const dev = join(work, 'dev')
+    const out = join(dev, 'site')
+    mkdirSync(out, {recursive: true})
+    writeFileSync(join(out, 'stale.html'), 'stale')
+    mkdirSync(dirname(out), {recursive: true})
+    await symlink(join(work, 'nowhere'), `${out}.next-999999`, 'dir')
+
+    await build(dev, out)
+
+    const stat = await lstat(out)
+    assert.ok(stat.isSymbolicLink(), 'out is now a symlink')
+    assert.equal(existsSync(join(out, 'stale.html')), false, 'the old real directory is gone')
+    const entries = await readdir(dev)
+    assert.deepEqual(entries.filter(entry => entry.startsWith('site.next-')), [],
+        'no stale next-<pid> entry is left behind')
 })
