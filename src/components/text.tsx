@@ -15,8 +15,11 @@ export const Text = defineComponent({
     component: ({props}) => <p>{inline(props.text)}</p>,
 })
 
-/** The text between the markup is at the even places of the split, the markup at the odd ones. */
-function inline(text: string) {
+/**
+ * A text's **bold** and `code` as elements. The text between the markup is at the even places of
+ * the split, the markup at the odd ones.
+ */
+export function inline(text: string) {
     return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/).map((part, i) =>
         i % 2 === 0 ? part
         : part.startsWith('**') ? <strong key={i}>{part.slice(2, -2)}</strong>

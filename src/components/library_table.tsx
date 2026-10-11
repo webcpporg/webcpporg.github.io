@@ -7,9 +7,15 @@
 import {defineComponent} from '@openuidev/react-lang'
 import * as z from 'zod'
 import {type Library, useShared} from '../context.js'
+import {bases} from '../head.js'
+import {libraryList} from '../software.js'
+
+/** The page whose JSON-LD lists the catalogue, the one the header names Libraries. */
+const librariesPage = 'libraries/'
 
 /**
- * Every library of the catalogue, one row each, as Boost's list gives them.
+ * Every library of the catalogue, one row each, as Boost's list gives them. On the libraries page
+ * it also adds the catalogue to the page's JSON-LD, as an `ItemList` of `SoftwareSourceCode`.
  * Tip: a phone's style stacks each row and shows a cell's `data-label` above it, in place of the
  * column's header.
  */
@@ -18,7 +24,11 @@ export const LibraryTable = defineComponent({
     description: 'The table of every library: its name, description, category, targets and original.',
     props: z.object({}),
     component: function Libraries() {
-        const {site} = useShared()
+        const {site, addToGraph} = useShared()
+        if (site.path === librariesPage) {
+            const base = bases[site.channel]
+            addToGraph(libraryList(base, base + site.path, site.catalogue))
+        }
         return (
             <div className="table">
                 <table className="libraries">

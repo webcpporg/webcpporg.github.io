@@ -63,7 +63,10 @@ C++ developer never runs one directly.
 | --- | --- |
 | `Jamfile` | the site's targets; `b2 site`, at the superproject, runs them |
 | `package.json`, `package-lock.json` | the site's own node dependencies, pinned |
+| `pages/` | the site's pages, in OpenUI Lang: `index.oui` is the home, `<name>.oui` the page `<name>/` |
 | `src/` | the components pages are written with, and the renderer: `server.tsx` prerenders a page, `client.tsx` hydrates it in the browser |
-| `assets/` | the styles and the logo, copied to the site's `assets/` |
-| `tools/build.mjs` | the `build` script: the bundles, and the pages rendered to HTML |
-| `test/` | the site's checks |
+| `assets/` | the styles, the logo and `card.svg`, the social cards' template, copied to the site's `assets/` |
+| `seo/queries.json` | the searches the site answers, each with the page that answers it, which a test checks |
+| `tools/build.mjs` | the `build` script: the bundles, and the pages rendered to HTML with their social cards (`tools/cards.mjs`) |
+| `tools/indexing.mjs` | `robots.txt`, `sitemap.xml`, `llms.txt` and `libraries.json`, written once `b2 site` has laid the whole site out |
+| `test/` | the site's checks, and `fixtures/catalogue.json`, the catalogue they render the pages with |

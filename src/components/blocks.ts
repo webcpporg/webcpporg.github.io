@@ -7,11 +7,13 @@
 import * as z from 'zod'
 import {Code} from './code.js'
 import {Doors} from './doors.js'
+import {LibraryList} from './library_list.js'
 import {LibraryTable} from './library_table.js'
 import {Link} from './link.js'
 import {Roadmap} from './roadmap.js'
+import {SearchForm} from './search_form.js'
 import {Targets} from './targets.js'
 import {Text} from './text.js'
 
 /** What a section holds: every block but a section or a hero. */
-export const block = z.union([Text.ref, Code.ref, Link.ref, Doors.ref, Targets.ref, LibraryTable.ref, Roadmap.ref])
+export const block = z.union([Text.ref, Code.ref, Link.ref, Doors.ref, Targets.ref, LibraryTable.ref, LibraryList.ref, Roadmap.ref, SearchForm.ref])

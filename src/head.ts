@@ -50,9 +50,14 @@ export function describe(site: SiteContext, title: string, description: string, 
         title: full,
         description,
         canonical,
-        image: `${base}cards/${site.path.replace(/\/$/, '') || 'home'}.png`,
+        image: base + cardPath(site.path),
         graph: [...siteGraph(base, canonical, title, description, site.path), ...graph],
     }
+}
+
+/** The social card of the page at `path`, from the site's root: `cards/<path or "home">.png`. */
+export function cardPath(path: string): string {
+    return `cards/${path.replace(/\/$/, '') || 'home'}.png`
 }
 
 /** The page's subject first, then the site's name. */

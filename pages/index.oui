@@ -1,0 +1,22 @@
+// Copyright (c) 2026 WebCpp.org
+//
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// https://www.boost.org/LICENSE_1_0.txt)
+
+root = Page("C++ for the web: browser, server and native", "Header-only C++ libraries for the web: the same code runs in the browser with Emscripten, on servers as WASI WebAssembly containers, and natively.", [hero, places, doors, examples])
+
+hero = Hero("Where C++ and the web meet", "webcpp brings the best of C++ to the web, and the libraries web developers use most to C++, for everyone who builds decentralized applications.", [libraries, start])
+libraries = Link("See the libraries", "libraries/")
+start = Link("Get started", "cpp/")
+
+places = Section("The same code, wherever it runs", [placesText, targets])
+placesText = Text("Each library is header-only C++20, built and tested with b2 on every target it declares. Each target has its purpose:")
+targets = Targets()
+
+doors = Section("Where to start", [doorList])
+doorList = Doors()
+
+examples = Section("Examples", [examplesText, examplesLink])
+examplesText = Text("The first example comes with the visualizer: a calculator whose C++ runs in the browser, each step shown as it runs, from the JavaScript that calls into WebAssembly to the C++ inside it. The examples page lists what follows it.")
+examplesLink = Link("What is coming", "examples/")

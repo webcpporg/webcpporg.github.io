@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<!--
+  Copyright (c) 2026 WebCpp.org
+
+  Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file LICENSE_1_0.txt or copy at
+  https://www.boost.org/LICENSE_1_0.txt)
+
+  The social card of a page, 1200 by 630: tools/cards.mjs draws assets/logo.svg inside the
+  element `logo` and sets the page's title in the element `title`, wrapped into lines that fit
+  between the margins, then renders it to PNG. The styles are inline, since the logo's own
+  stylesheet styles every text of the document it is drawn into.
+-->
+<rect width="1200" height="630" fill="#ffffff"/>
+<svg id="logo" x="80" y="72" width="336" height="84" viewBox="0 0 112 28"></svg>
+<text id="title" x="80" y="360" style="fill: #1d1d1f; font-family: 'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', 'DejaVu Sans', sans-serif; font-size: 72px; font-weight: 700; letter-spacing: -1px">The page's title</text>
+<rect x="80" y="534" width="96" height="8" rx="4" fill="#0066cc"/>
+</svg>

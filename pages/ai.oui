@@ -1,0 +1,20 @@
+// Copyright (c) 2026 WebCpp.org
+//
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// https://www.boost.org/LICENSE_1_0.txt)
+
+root = Page("llms.txt and libraries.json, for AI agents", "What AI agents read to find webcpp's C++ libraries: llms.txt, a line for every library and page, and libraries.json, the catalogue. Integrations to come.", [intro, llms, catalogue, coming])
+
+intro = Text("AI agents are first-class readers of webcpp: they use what it publishes to find libraries of high quality. The site writes two files for them at its root.")
+
+llms = Section("llms.txt", [llmsText, llmsLink])
+llmsText = Text("What webcpp is, then a link and a line for every library and every page of the site, after the llms.txt convention.")
+llmsLink = Link("llms.txt", "llms.txt")
+
+catalogue = Section("libraries.json", [catalogueText, catalogueLink])
+catalogueText = Text("The catalogue the site is built from, read from every library's meta: its key, name, description, categories and targets, its repository and its page, and, for a port, the original it follows, with its language, version and licence.")
+catalogueLink = Link("libraries.json", "libraries.json")
+
+coming = Section("What is coming", [roadmap])
+roadmap = Roadmap(["Integrations with the AIs, which bring them within reach of C++ programs.", "Documentation written for AI developers, beside the documentation for C++ developers."])

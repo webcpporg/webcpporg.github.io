@@ -162,10 +162,12 @@ main p {
     max-width: 68ch;
 }
 
+/* A link that stands as a block of the page is a line of its own, so that two never run together. */
 main > a,
 section > a {
-    display: inline-block;
-    margin: 0 0 16px;
+    display: block;
+    width: fit-content;
+    margin: 0 0 12px;
 }
 
 pre {
@@ -177,10 +179,13 @@ pre {
     line-height: 1.45;
 }
 
-main p code {
+/* A command or a name in a sentence is never broken across lines. */
+main p code,
+main li code {
     padding: 0.1em 0.3em;
     border-radius: 4px;
     background: var(--surface);
+    white-space: nowrap;
 }
 
 .hero {
@@ -253,12 +258,95 @@ main p code {
 }
 
 .roadmap {
+    max-width: 68ch;
     margin: 0 0 16px;
     padding-left: 20px;
 }
 
 .roadmap li + li {
     margin-top: 6px;
+}
+
+/* A list of libraries: each name on its line, its description under it. */
+
+.library-list {
+    max-width: 68ch;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.library-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.library-list li:first-child {
+    border-top: 1px solid var(--rule);
+}
+
+.library-list a {
+    font-weight: 600;
+}
+
+.library-list p {
+    margin: 2px 0 0;
+    color: var(--muted);
+}
+
+/* The search box: the field takes the row's width, the button keeps its own. */
+
+.search {
+    max-width: 640px;
+    margin: 0 0 24px;
+}
+
+.search label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.search-row {
+    display: flex;
+    gap: 8px;
+}
+
+.search input[type="search"] {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 16px;
+    border: 1px solid var(--rule);
+    border-radius: 980px;
+    background: var(--background);
+    color: var(--text);
+    font: inherit;
+}
+
+.search input[type="search"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.search button {
+    padding: 10px 20px;
+    border: 0;
+    border-radius: 980px;
+    background: var(--accent-fill);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.search button:hover {
+    filter: brightness(1.1);
+}
+
+.search button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 /*

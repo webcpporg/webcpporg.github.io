@@ -11,7 +11,8 @@
 //       tests import, and src/client.tsx into build/client/site.js, which the browser runs;
 //   build.mjs --render --pages <dir> --out <dir> --context <file.json>
 //       renders every <dir>/**/*.oui into <out>/<path>/index.html with the context the file
-//       holds, and copies assets/ and the client bundle into <out>/assets/.
+//       holds, and its social card into <out>/cards/ (tools/cards.mjs), and copies assets/ and
+//       the client bundle into <out>/assets/.
 //
 // Both steps may be given at once; --bundle runs first. A fault of a page prints
 // `<file>:<line>: <message>` and exits 1.
@@ -28,6 +29,7 @@ import {cp, mkdir, readdir, readFile, writeFile} from 'node:fs/promises'
 import {dirname, join, relative, resolve} from 'node:path'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {parseArgs} from 'node:util'
+import {writeCards} from './cards.mjs'
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -100,16 +102,19 @@ function pathOf(page) {
 }
 
 async function render({pages, out, context: contextFile}) {
-    const {renderPage, PageError} = await import(pathToFileURL(join(site, 'build/server.mjs')).href)
+    const {renderPage, pageTitle, cardPath, PageError} = await import(pathToFileURL(join(site, 'build/server.mjs')).href)
     const context = JSON.parse(await readFile(contextFile, 'utf8'))
+    const cards = []
     for (const page of await pagesUnder(pages)) {
         const path = pathOf(page)
         const file = join(pages, page)
         const root = '../'.repeat(path.split('/').filter(Boolean).length)
         try {
-            const html = renderPage(file, await readFile(file, 'utf8'), {...context, root, path})
+            const source = await readFile(file, 'utf8')
+            const html = renderPage(file, source, {...context, root, path})
             await mkdir(join(out, path), {recursive: true})
             await writeFile(join(out, path, 'index.html'), html)
+            cards.push({file: cardPath(path), title: pageTitle(file, source)})
         } catch (error) {
             if (error instanceof PageError) {
                 console.error(`${error.file}:${error.line}: ${error.message}`)
@@ -118,6 +123,7 @@ async function render({pages, out, context: contextFile}) {
             throw error
         }
     }
+    await writeCards(out, cards)
     await cp(join(site, 'assets'), join(out, 'assets'), {recursive: true})
     await cp(join(site, 'build/client/site.js'), join(out, 'assets/site.js'))
 }

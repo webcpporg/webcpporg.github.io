@@ -10,8 +10,8 @@ import {useShared} from '../context.js'
 
 const doors = [
     {name: 'C++', page: 'cpp/', text: 'Getting started, building for each target, and every library\'s page.'},
-    {name: 'JavaScript', page: 'javascript/', text: 'Using a webcpp library from JavaScript, and the same code on a server.'},
-    {name: 'AI', page: 'ai/', text: 'llms.txt and libraries.json, the catalogue for agents.'},
+    {name: 'JavaScript', page: 'javascript/', text: 'What builds for the browser today, and what is coming: C++ called from JavaScript, and back.'},
+    {name: 'AI', page: 'ai/', text: 'llms.txt and libraries.json, the catalogue for agents, and the integrations to come.'},
 ]
 
 /** The three ways into the site, one for each kind of developer. */

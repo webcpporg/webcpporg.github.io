@@ -14,6 +14,7 @@ import {encodeSource, scriptJson} from './source.js'
 import {PageTree} from './tree.js'
 
 export {PageError}
+export {cardPath} from './head.js'
 export type {Library, SiteContext} from './context.js'
 
 /**
@@ -48,6 +49,14 @@ export function renderPage(file: string, source: string, context: SiteContext): 
         '</html>',
         '',
     ].join('\n')
+}
+
+/**
+ * The title the Page of `file` gives, without the site's name the head adds: what the page's
+ * social card shows. A fault of the page throws as renderPage's does.
+ */
+export function pageTitle(file: string, source: string): string {
+    return (checkPage(file, source).props as {title: string}).title
 }
 
 /**

@@ -1,0 +1,18 @@
+// Copyright (c) 2026 WebCpp.org
+//
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// https://www.boost.org/LICENSE_1_0.txt)
+
+root = Page("Use C++ from JavaScript, in the browser", "For JavaScript developers: use C++ compiled to WebAssembly, with WebRTC peer to peer rooms in the browser today; calling JavaScript from C++ is next.", [intro, today, coming])
+
+intro = Text("webcpp compiles C++ libraries to WebAssembly with Emscripten, for a page's JavaScript to use: code that controls its own memory, in a module you download once. Some are ports of the libraries you already use, kept wire compatible with them.")
+
+today = Section("What builds for the browser today", [todayText, list, chatText, chat])
+todayText = Text("These libraries build for Emscripten, the browser's target:")
+list = LibraryList("emscripten")
+chatText = Text("trystero's repository has a chat page whose room is C++ compiled to WebAssembly, meeting its peers over public Nostr relays.")
+chat = Link("The chat page's source", "https://github.com/webcpporg/trystero/tree/main/example/chat")
+
+coming = Section("What is coming", [roadmap])
+roadmap = Roadmap(["trystero's JavaScript API: Trystero's own `joinRoom`, `makeAction` and `onPeerJoin`, backed by C++, so that a page changes only its import.", "Trystero's own examples from trystero.dev, collaborative cursors first, running on webcpp's trystero.", "JavaScript functions exported to C++, so that C++ drives the page.", "Sizes, measured: each library's WebAssembly beside its JavaScript original's, raw, gzip and brotli.", "The same code on a server: a WASI component run by wasmtime, and a native program."])

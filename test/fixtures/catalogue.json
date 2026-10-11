@@ -1,0 +1,40 @@
+[
+    {
+        "category": [
+            "Concurrent",
+            "IO"
+        ],
+        "description": "Serverless WebRTC rooms for C++20, wire compatible with Trystero.",
+        "key": "trystero",
+        "name": "trystero",
+        "page": "libs/trystero/",
+        "port_of": {
+            "language": "JavaScript",
+            "licence": "MIT",
+            "name": "Trystero",
+            "url": "https://github.com/dmotz/trystero",
+            "version": "0.26.0"
+        },
+        "repository": "https://github.com/webcpporg/trystero",
+        "targets": [
+            "emscripten",
+            "native"
+        ]
+    },
+    {
+        "category": [
+            "Concurrent"
+        ],
+        "description": "A header-only, deterministic actor system: actors that handle one message at a time, with fuel per execution, timers and a lifecycle.",
+        "key": "xactor",
+        "name": "xactor",
+        "page": "libs/xactor/",
+        "port_of": null,
+        "repository": "https://github.com/webcpporg/xactor",
+        "targets": [
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    }
+]

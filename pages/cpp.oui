@@ -1,0 +1,30 @@
+// Copyright (c) 2026 WebCpp.org
+//
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// https://www.boost.org/LICENSE_1_0.txt)
+
+root = Page("C++ for WebAssembly: Emscripten, WASI and wasmtime", "Getting started with webcpp's C++ libraries: one program built for the browser with Emscripten, as a WASI component run by wasmtime, and natively.", [intro, start, targets, pages])
+
+intro = Text("webcpp's libraries are header-only C++20, built, tested and documented with b2, the way Boost's are. The same program builds for the browser, for a server as a WebAssembly component, and natively.")
+
+start = Section("Getting started", [startText, startCode, useText, readme])
+startText = Text("Install Boost, b2 and a C++20 compiler, at the versions the README gives. Then clone the superproject with its libraries, and run every library's tests:")
+startCode = Code("bash", "git clone --recursive https://github.com/webcpporg/webcpp\ncd webcpp\nb2 test")
+useText = Text("A b2 project uses a library through `/webcpp/<name>//<name>`. CMake or a plain compiler uses the headers that `b2 install --prefix=<dir>` copies to `<dir>/include/webcpp/`.")
+readme = Link("The README: prerequisites and configuration", "https://github.com/webcpporg/webcpp/blob/main/README.md")
+
+targets = Section("Building for each target", [nativeText, nativeCode, wasiText, wasiCode, emscriptenText, emscriptenCode, declaredText, toolsets])
+nativeText = Text("**Native.** b2 builds with your own compiler, as for any C++ library, for programs that integrate closely with an operating system.")
+nativeCode = Code("bash", "b2 test example")
+wasiText = Text("**WASI, for servers.** Two clang toolsets of wasi-sdk build for `wasm32-wasip2` and `wasm32-wasip3`. wasmtime runs each test, and serves a component the way a cloud runs a WebAssembly container, lighter than Docker.")
+wasiCode = Code("bash", "b2 toolset=clang-wasip2 testing.launcher=wasmtime test example\nb2 toolset=clang-wasip3 testing.launcher=wasmtime test example")
+emscriptenText = Text("**Emscripten, for the browser.** The `emscripten` toolset builds a library that declares that target, and node runs its tests. A program for a page is linked, and runs in the browser.")
+emscriptenCode = Code("bash", "b2 toolset=emscripten libs/<name>/test libs/<name>/example")
+declaredText = Text("`b2 declared-targets -d0` lists the targets each library declares.")
+toolsets = Link("Registering the WebAssembly toolsets", "https://github.com/webcpporg/webcpp/blob/main/README.md#webassembly")
+
+pages = Section("The libraries' pages", [pagesText, list, docs])
+pagesText = Text("Each library's page teaches it: its guide, its guarantees, its API reference and how it is tested.")
+list = LibraryList()
+docs = Link("The documentation's index", "docs/")

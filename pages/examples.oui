@@ -1,0 +1,13 @@
+// Copyright (c) 2026 WebCpp.org
+//
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// https://www.boost.org/LICENSE_1_0.txt)
+
+root = Page("Examples: C++ and JavaScript, step by step", "webcpp's examples, each to run live in the visualizer beside a page that explains it. The first, a C++ calculator in the browser, comes with the visualizer.", [intro, coming])
+
+intro = Text("Each example will run live in the visualizer, which shows every step as it runs: the JavaScript that calls into the WebAssembly module, the C++ that runs inside it, and the JavaScript functions it calls back with your input. A page beside it will explain the example.")
+
+coming = Section("What is coming", [comingText, roadmap])
+comingText = Text("The first example comes with the visualizer. Until then, the gallery lists the examples on their way, in order.")
+roadmap = Roadmap(["Calculator: JavaScript calls C++ with your input, which pratt parses and evaluates, exact in decimal.", "State machine: the same XState JSON run by webcpp's xstate in WebAssembly, beside the browser's own state.", "C++ calls the browser: JavaScript functions exported to C++, so that C++ drives the page.", "Collaborative cursors: Trystero's own example, unchanged but for its import, on webcpp's trystero.", "File transfer and video chat: Trystero's own examples, as trystero's roadmap delivers what they need.", "On the server: the same program as a WASI component served by wasmtime, and natively."])

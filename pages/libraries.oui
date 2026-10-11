@@ -1,0 +1,14 @@
+// Copyright (c) 2026 WebCpp.org
+//
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// https://www.boost.org/LICENSE_1_0.txt)
+
+root = Page("Header-only C++20 libraries for WebAssembly", "Every webcpp library, as Boost lists its own: a Pratt parser, XState state machines, WebRTC rooms; each built for Emscripten, WASI or natively.", [intro, table, bring])
+
+intro = Text("Every library of webcpp, as Boost lists its own. Each name leads to the library's page: its guide, its guarantees, its API reference and how it is tested. A port names the original it follows, at the exact version it is proven against.")
+table = LibraryTable()
+
+bring = Section("Bring a library", [bringText, bringLink])
+bringText = Text("A port of a library web developers use, or a library of your own, joins webcpp through an issue that proposes it.")
+bringLink = Link("How to bring a library", "community/")

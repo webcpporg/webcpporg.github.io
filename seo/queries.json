@@ -1,0 +1,18 @@
+[
+    {"query": "C++ for the web", "page": ""},
+    {"query": "C++ in the browser", "page": ""},
+    {"query": "WebAssembly containers C++", "page": ""},
+    {"query": "C++ WebAssembly libraries", "page": "libraries/"},
+    {"query": "header-only C++20 libraries", "page": "libraries/"},
+    {"query": "Emscripten C++ library", "page": "libraries/"},
+    {"query": "C++ state machine XState", "page": "libraries/"},
+    {"query": "C++ Pratt parser", "page": "libraries/"},
+    {"query": "WASI C++", "page": "cpp/"},
+    {"query": "C++ wasmtime", "page": "cpp/"},
+    {"query": "C++ WebRTC", "page": "javascript/"},
+    {"query": "C++ peer to peer browser", "page": "javascript/"},
+    {"query": "use C++ from JavaScript", "page": "javascript/"},
+    {"query": "call JavaScript from C++", "page": "javascript/"},
+    {"query": "llms.txt C++ libraries", "page": "ai/"},
+    {"query": "C++ examples in the browser", "page": "examples/"}
+]

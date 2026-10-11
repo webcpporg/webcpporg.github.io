@@ -95,6 +95,7 @@ const hosts = new Map([
     ['webcpp.org', "the release's base"],
     ['github.com', "webcpp's organization and source, in JSON-LD and the footer"],
     ['www.boost.org', 'the licence, linked from the footer'],
+    ['www.google.com', "the search page's form, a Google search restricted to the site"],
     ['schema.org', 'the JSON-LD @context'],
     ['json-schema.org', 'the $schema of the JSON Schema zod writes for OpenUI'],
     ['www.w3.org', 'the SVG and MathML namespaces react-dom names'],
