@@ -1,0 +1,17 @@
+# Copyright (c) 2026 WebCpp.org
+#
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# https://www.boost.org/LICENSE_1_0.txt)
+#
+# The site: its pages, rendered from OpenUI Lang into static HTML, and its
+# own tests. b2 site, at the superproject, assembles them with every
+# library's page into bin/site/.
+
+project /webcpp/site ;
+
+make node-modules.stamp : package.json package-lock.json : @webcpp-doc%install-packages-in
+  : <webcpp-boost-check>off ;
+alias node-modules : node-modules.stamp : <webcpp-boost-check>off ;
+explicit node-modules.stamp node-modules ;
+always node-modules.stamp ;
