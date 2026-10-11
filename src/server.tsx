@@ -22,9 +22,13 @@ export type {Library, SiteContext} from './context.js'
  * the `<noscript>` message), the tree OpenUI renders, prerendered inside `<div id="root">` (the
  * header, band and footer are its Page's), and the page's source and context, which the browser
  * hydrates from.
- * A fault of the page throws a PageError naming `file` and its line.
+ * A fault of the page, or a preview context carrying a release's version, throws a PageError
+ * naming `file` and its line.
  */
 export function renderPage(file: string, source: string, context: SiteContext): string {
+    if (context.channel === 'preview' && context.version !== null) {
+        throw new PageError(file, 1, `the preview carries no version, and this context's is ${context.version}: build the release with its own channel, or leave the version out`)
+    }
     const root = checkPage(file, source)
     const graph: GraphNode[] = []
     const body = markup(renderToString(<PageTree source={source} shared={{site: context, addToGraph: node => graph.push(node)}} />))

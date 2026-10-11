@@ -81,6 +81,24 @@ test('the preview band names the commit and its date', () => {
     assert.match(html, /Preview of main at <code>0123456<\/code>, 2026-10-10/)
 })
 
+test('the release band names the version, with no commit', () => {
+    const release = {...context, channel: 'release', version: '1.2.3'}
+    const html = renderPage('pages/index.oui', page, release)
+    assert.match(html, /<p class="band">webcpp 1\.2\.3<\/p>/)
+})
+
+test("the release's canonical URL is the release's own base", () => {
+    const release = {...context, channel: 'release', version: '1.2.3', path: 'libraries/', root: '../'}
+    const html = renderPage('pages/libraries.oui', page, release)
+    assert.match(html, /<link rel="canonical" href="https:\/\/webcpp\.org\/libraries\/">/)
+    assert.match(html, /<meta property="og:url" content="https:\/\/webcpp\.org\/libraries\/">/)
+})
+
+test('a preview build carries no version', () => {
+    assert.throws(() => renderPage('pages/index.oui', page, {...context, version: '1.2.3'}),
+        e => e instanceof PageError && e.file === 'pages/index.oui' && /preview/.test(e.message) && /version/.test(e.message))
+})
+
 test('a page that names an unknown component fails with its file and line', () => {
     assert.throws(() => renderPage('pages/bad.oui', 'root = Page("x", "y", [a])\na = Nope("z")\n', context),
         e => e instanceof PageError && e.file === 'pages/bad.oui' && e.line === 2 && /Nope/.test(e.message))
