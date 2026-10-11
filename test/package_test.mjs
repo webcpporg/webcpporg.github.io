@@ -17,6 +17,7 @@ const pinned = {
     'node_modules/esbuild': '0.28.2',
     'node_modules/html-validate': '11.16.2',
     'node_modules/@resvg/resvg-js': '2.6.2',
+    'node_modules/@expo-google-fonts/inter': '0.4.2',
     'node_modules/xstate': '5.33.2',
 }
 

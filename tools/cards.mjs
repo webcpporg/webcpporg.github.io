@@ -5,8 +5,11 @@
 // https://www.boost.org/LICENSE_1_0.txt)
 
 // The pages' social cards, which the build's --render step writes: for each page, a PNG of 1200
-// by 630 at the path its head names in og:image and twitter:image (head.ts's cardPath). Each is assets/card.svg with assets/logo.svg drawn in it and the page's title set
-// in its text, rendered by @resvg/resvg-js with the system's fonts.
+// by 630 at the path its head names in og:image and twitter:image (head.ts's cardPath).
+//
+// Each is assets/card.svg with assets/logo.svg drawn in it and the page's title set in its text,
+// rendered by @resvg/resvg-js with Inter, from @expo-google-fonts/inter (SIL OFL 1.1), pinned
+// by the lockfile, and no font of the system: a card is the same bytes on every machine.
 
 import {mkdir, readFile, writeFile} from 'node:fs/promises'
 import {dirname, join, resolve} from 'node:path'
@@ -14,6 +17,25 @@ import {fileURLToPath} from 'node:url'
 import {Resvg} from '@resvg/resvg-js'
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+
+/** The cards' one font family, which assets/card.svg names. */
+export const fontFamily = 'Inter'
+
+/** Inter's files, the title's weight and the logo's. */
+const inter = join(site, 'node_modules/@expo-google-fonts/inter')
+
+/**
+ * What every renderer of a card is given: the pinned font's files and nothing of the system's.
+ * Tip: a family or a weight the files lack falls back to Inter, the default and sans-serif family.
+ */
+export const resvgOptions = {
+    font: {
+        loadSystemFonts: false,
+        fontFiles: [join(inter, '600SemiBold/Inter_600SemiBold.ttf'), join(inter, '700Bold/Inter_700Bold.ttf')],
+        defaultFontFamily: fontFamily,
+        sansSerifFamily: fontFamily,
+    },
+}
 
 /** The card's width, where the title's lines fit between margins as wide as its `x`. */
 const width = 1200
@@ -79,7 +101,7 @@ function compose(template, logo, lines, size) {
 function titleWidth(svg) {
     const text = svg.match(/<text id="title"[\s\S]*?<\/text>/)[0]
     const alone = `<svg xmlns="http://www.w3.org/2000/svg" width="${width * 10}" height="${width}">${text}</svg>`
-    const box = new Resvg(alone, {font: {loadSystemFonts: true}}).innerBBox()
+    const box = new Resvg(alone, resvgOptions).innerBBox()
     return box && box.width > 0 ? box.width : null
 }
 
@@ -87,8 +109,7 @@ function titleWidth(svg) {
  * The PNG of `title`'s card: set at the template's size in as few lines as fit, smaller when it
  * needs more than `maxLines` lines or a line overflows the margins. A line holds as many
  * characters as the title's own average glyph, measured on one line, lets fit.
- * Tip: a machine without any of the fonts the template names would render a card with no title;
- * that throws instead.
+ * Tip: a font file missing or unreadable would render a card with no title; that throws instead.
  */
 export async function renderCard(title) {
     const template = await readFile(join(site, 'assets/card.svg'), 'utf8')
@@ -96,7 +117,7 @@ export async function renderCard(title) {
     const margin = Number(template.match(/<text id="title" x="(\d+)"/)?.[1] ?? 0)
     const largest = Number(template.match(/<text id="title"[^>]*font-size:\s*(\d+)px/)?.[1] ?? 0)
     const room = width - 2 * margin
-    const noFont = () => new Error(`cards.mjs: no font of the system draws the card's title "${title}"`)
+    const noFont = () => new Error(`cards.mjs: ${fontFamily}, from ${inter}, draws no glyph of the card's title "${title}"`)
     const oneLine = titleWidth(compose(template, logo, [title], largest))
     if (oneLine === null) {
         throw noFont()
@@ -113,7 +134,7 @@ export async function renderCard(title) {
             throw noFont()
         }
         if (taken <= room) {
-            return new Resvg(svg, {font: {loadSystemFonts: true}}).render().asPng()
+            return new Resvg(svg, resvgOptions).render().asPng()
         }
     }
     throw new Error(`cards.mjs: "${title}" fits no card, even at ${smallest}px`)
