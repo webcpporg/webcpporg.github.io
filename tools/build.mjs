@@ -19,6 +19,10 @@
 // Both bundles define process.env.NODE_ENV as "production": OpenUI's web entry mounts a
 // devtools widget, fetched from a CDN, in development, and only the define drops it. OpenUI and
 // zod are bundled into the server too, so that its test reads the code the browser runs.
+//
+// In both, lang-core's telemetry, which posts to PostHog when the environment asks for it, is
+// replaced by src/openui_telemetry.ts, which does nothing: no bundle carries the analytics' host or
+// key, so no reader's browser and no build can reach them.
 
 import {cp, mkdir, readdir, readFile, writeFile} from 'node:fs/promises'
 import {dirname, join, relative, resolve} from 'node:path'
@@ -26,6 +30,31 @@ import {fileURLToPath, pathToFileURL} from 'node:url'
 import {parseArgs} from 'node:util'
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+
+/**
+ * The esbuild plugin that loads @openuidev/lang-core with its telemetry region, inlined in
+ * dist/index.mjs, replaced by an import of src/openui_telemetry.ts, and without the import of the
+ * shared module that holds the analytics' host and key, which only that region uses.
+ * Tip: a lang-core whose index.mjs no longer has that shape stops the build, naming it, rather than
+ * bundle a telemetry this plugin no longer removes.
+ */
+const withoutTelemetry = {
+    name: 'without-openui-telemetry',
+    setup(build) {
+        build.onLoad({filter: /[\\/]@openuidev[\\/]lang-core[\\/]dist[\\/]index\.mjs$/}, async args => {
+            const source = await readFile(args.path, 'utf8')
+            const shared = /^import \{[^}]*\} from "\.\/shared-[\w-]+\.mjs";\n/m
+            const region = /^\/\/#region src\/telemetry\/runtime\.ts\n[\s\S]*?^\/\/#endregion\n/m
+            if (!shared.test(source) || !region.test(source)) {
+                return {errors: [{text: `${args.path}: no telemetry region and shared import to replace; check src/openui_telemetry.ts against this lang-core`}]}
+            }
+            const stub = JSON.stringify(join(site, 'src/openui_telemetry.ts'))
+            const replaced = 'import {recordSystemPromptGeneration, prepareParserParseTelemetry, captureParserParseResult, ' +
+                `captureParserParseException} from ${stub};\n`
+            return {contents: source.replace(shared, '').replace(region, replaced), loader: 'js'}
+        })
+    },
+}
 
 async function bundle() {
     const esbuild = await import('esbuild')
@@ -35,6 +64,7 @@ async function bundle() {
         define: {'process.env.NODE_ENV': '"production"'},
         logLevel: 'warning',
         absWorkingDir: site,
+        plugins: [withoutTelemetry],
     }
     await esbuild.build({
         ...common,
@@ -70,9 +100,6 @@ function pathOf(page) {
 }
 
 async function render({pages, out, context: contextFile}) {
-    // OpenUI's parser can send telemetry from node when the environment asks for it; the build
-    // reaches no network, whatever the environment says.
-    process.env.OPENUI_TELEMETRY_DISABLED = '1'
     const {renderPage, PageError} = await import(pathToFileURL(join(site, 'build/server.mjs')).href)
     const context = JSON.parse(await readFile(contextFile, 'utf8'))
     for (const page of await pagesUnder(pages)) {

@@ -6,13 +6,16 @@
 
 import {defineComponent} from '@openuidev/react-lang'
 import * as z from 'zod'
+import {Band} from './band.js'
 import {block} from './blocks.js'
+import {Footer} from './footer.js'
+import {Header} from './header.js'
 import {Hero} from './hero.js'
 import {Section} from './section.js'
 
 /**
- * A page: the document's `<main>`. Its title and description are the head's, which the shell
- * writes.
+ * A page: the site's header and band, the document's `<main>`, and the footer. Its title and
+ * description are the head's, which the shell writes.
  * Tip: a page has one `<h1>`: its Hero's title when its first block is a Hero, else its own.
  */
 export const Page = defineComponent({
@@ -24,10 +27,15 @@ export const Page = defineComponent({
         body: z.array(z.union([Hero.ref, Section.ref, block])),
     }),
     component: ({props, renderNode}) => (
-        <main>
-            {startsWithHero(props.body) ? null : <h1>{props.title}</h1>}
-            {renderNode(props.body)}
-        </main>
+        <>
+            <Header.component props={{}} renderNode={renderNode} />
+            <Band.component props={{}} renderNode={renderNode} />
+            <main>
+                {startsWithHero(props.body) ? null : <h1>{props.title}</h1>}
+                {renderNode(props.body)}
+            </main>
+            <Footer.component props={{}} renderNode={renderNode} />
+        </>
     ),
 })
 

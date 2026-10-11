@@ -34,7 +34,7 @@ const parser = createParser(schema, library.root)
  */
 export function checkPage(file: string, source: string): ElementNode {
     const result = parser.parse(source)
-    const lines = new Lines(source)
+    const lines = new Lines(withoutComments(source))
     const fault = (line: number, message: string) => new PageError(file, line, message)
     if (result.meta.incomplete) {
         throw fault(lines.last(), 'the page ends inside a call, a list or a string')
@@ -122,7 +122,34 @@ function componentsOf(component: string, prop: string): Set<string> {
 }
 
 /**
- * The lines of a page's source, read the way OpenUI's lexer reads them: the words outside its
+ * `source` with its comments, from `//` or `#` to the end of a line outside a string, removed the
+ * way OpenUI Lang removes them before it parses (lang-core's `stripComments`), its lines kept where
+ * they are.
+ * Tip: a comment's apostrophe would otherwise open a string that hides every later line.
+ */
+function withoutComments(source: string): string {
+    let quote = ''
+    return source.split('\n').map(line => {
+        for (let i = 0; i < line.length; i++) {
+            const character = line[i]
+            if (quote) {
+                if (character === '\\' && i + 1 < line.length) {
+                    i += 1
+                } else if (character === quote) {
+                    quote = ''
+                }
+            } else if (character === '"' || character === "'") {
+                quote = character
+            } else if ((character === '/' && line[i + 1] === '/') || character === '#') {
+                return line.slice(0, i)
+            }
+        }
+        return line
+    }).join('\n')
+}
+
+/**
+ * The lines of a page's source without its comments, read the way OpenUI's lexer reads them: the words outside its
  * strings, and the statements that start on each.
  */
 class Lines {

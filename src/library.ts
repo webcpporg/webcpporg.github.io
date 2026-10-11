@@ -5,8 +5,11 @@
 // https://www.boost.org/LICENSE_1_0.txt)
 
 import {createLibrary} from '@openuidev/react-lang'
+import {Band} from './components/band.js'
 import {Code} from './components/code.js'
 import {Doors} from './components/doors.js'
+import {Footer} from './components/footer.js'
+import {Header} from './components/header.js'
 import {Hero} from './components/hero.js'
 import {LibraryTable} from './components/library_table.js'
 import {Link} from './components/link.js'
@@ -16,8 +19,11 @@ import {Section} from './components/section.js'
 import {Targets} from './components/targets.js'
 import {Text} from './components/text.js'
 
-/** Every component a page of the site may name; a page's root is a Page. */
+/**
+ * Every component of the site; a page's root is a Page. Header, Band and Footer are the Page's own,
+ * which no block of a page may hold.
+ */
 export const library = createLibrary({
-    components: [Page, Hero, Section, Text, Code, Link, Doors, Targets, LibraryTable, Roadmap],
+    components: [Page, Header, Band, Footer, Hero, Section, Text, Code, Link, Doors, Targets, LibraryTable, Roadmap],
     root: 'Page',
 })

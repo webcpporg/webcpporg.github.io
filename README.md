@@ -13,9 +13,12 @@ There are two ways into this repository, for two different readers.
 
 **Path 1, the examples and pages, with npm alone:**
 
-    npm ci
+    OPENUI_TELEMETRY_DISABLED=1 npm ci
     npm run dev
     npm test
+
+`OPENUI_TELEMETRY_DISABLED=1` keeps OpenUI's install script from reporting
+the install to its analytics, as `b2` does for every install it makes.
 
 `npm run dev` needs no C++ toolchain: it serves the examples' wasm already
 built, from `bin/site/` when the superproject built it locally, or else the

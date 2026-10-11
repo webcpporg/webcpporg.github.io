@@ -25,3 +25,13 @@ test('the lockfile pins the versions the plan names', () => {
         assert.equal(lock.packages[path]?.version, version, path)
     }
 })
+
+test('every npm ci the README shows turns the install telemetry off', () => {
+    // @openuidev/lang-core's postinstall reports each install to PostHog unless this is set.
+    const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8')
+    const installs = readme.split('\n').filter(line => /\bnpm ci\b/.test(line))
+    assert.ok(installs.length > 0, 'the README shows npm ci')
+    for (const line of installs) {
+        assert.match(line, /OPENUI_TELEMETRY_DISABLED=1 npm ci\b/, line)
+    }
+})

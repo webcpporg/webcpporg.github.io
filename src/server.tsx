@@ -6,8 +6,9 @@
 
 import {renderToStaticMarkup, renderToString} from 'react-dom/server'
 import {checkPage, PageError} from './check.js'
-import {Bottom, Top} from './chrome.js'
-import type {GraphNode, SiteContext} from './context.js'
+import {Band} from './components/band.js'
+import {Header} from './components/header.js'
+import {type GraphNode, SharedContext, type SiteContext} from './context.js'
 import {attribute, describe, writeHead} from './head.js'
 import {encodeSource, scriptJson} from './source.js'
 import {PageTree} from './tree.js'
@@ -16,9 +17,10 @@ export {PageError}
 export type {Library, SiteContext} from './context.js'
 
 /**
- * A whole HTML document for the page `file` whose OpenUI Lang is `source`: the shell (its head,
- * header, band and footer, and the `<noscript>` message), the page's source and context, which
- * the browser hydrates from, and the tree OpenUI renders, prerendered inside `<div id="root">`.
+ * A whole HTML document for the page `file` whose OpenUI Lang is `source`: the shell (its head and
+ * the `<noscript>` message), the tree OpenUI renders, prerendered inside `<div id="root">` (the
+ * header, band and footer are its Page's), and the page's source and context, which the browser
+ * hydrates from.
  * A fault of the page throws a PageError naming `file` and its line.
  */
 export function renderPage(file: string, source: string, context: SiteContext): string {
@@ -39,9 +41,7 @@ export function renderPage(file: string, source: string, context: SiteContext): 
         '</head>',
         '<body>',
         '<noscript>This site needs JavaScript for its examples; every page still reads without it.</noscript>',
-        markup(renderToStaticMarkup(<Top site={context} />)),
         `<div id="root">${body}</div>`,
-        markup(renderToStaticMarkup(<Bottom />)),
         `<script type="text/openui" id="page-source">${encodeSource(source)}</script>`,
         `<script type="application/json" id="site-context">${scriptJson(context)}</script>`,
         '</body>',
@@ -51,15 +51,22 @@ export function renderPage(file: string, source: string, context: SiteContext): 
 }
 
 /**
- * A part of the shell for the pages the site does not render itself, which assemble.py inserts:
- * `docs-header`, the header and band, after the `<body>` of every library's page. Its links start
- * with `context.root`, which the caller chooses for the pages it inserts it into.
+ * A part of a page for the pages the site does not render itself, which assemble.py inserts:
+ * `docs-header`, the Header and the Band every Page shows, after the `<body>` of every library's
+ * page. Its links start with `context.root`, which the caller chooses for the pages it inserts it
+ * into.
  */
 export function renderFragment(name: 'docs-header', context: SiteContext): string {
     if (name !== 'docs-header') {
-        throw new Error(`${name} is not a fragment of the shell`)
+        throw new Error(`${name} is not a fragment of the site`)
     }
-    return markup(renderToStaticMarkup(<Top site={context} />))
+    const renderNode = () => null
+    return markup(renderToStaticMarkup(
+        <SharedContext.Provider value={{site: context, addToGraph: () => {}}}>
+            <Header.component props={{}} renderNode={renderNode} />
+            <Band.component props={{}} renderNode={renderNode} />
+        </SharedContext.Provider>,
+    ))
 }
 
 /**

@@ -4,7 +4,9 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // https://www.boost.org/LICENSE_1_0.txt)
 
-import type {SiteContext} from './context.js'
+import {defineComponent} from '@openuidev/react-lang'
+import * as z from 'zod'
+import {useShared} from '../context.js'
 
 /** The site's pages the header links to, by their path from the root. */
 const sections = [
@@ -19,13 +21,16 @@ const sections = [
 ]
 
 /**
- * What the shell writes around every page, and around every library's page: the header with the
- * logo and the navigation, then the channel's band.
- * Tip: it is the shell's, not the page's, so it is rendered once on the server and never hydrated.
+ * The site's header, the logo and the navigation, which every page's Page and every library's
+ * page (renderFragment's `docs-header`) show.
  */
-export function Top({site}: {site: SiteContext}) {
-    return (
-        <>
+export const Header = defineComponent({
+    name: 'Header',
+    description: 'The site\'s header: the logo and the navigation. A Page places it; a page never names it.',
+    props: z.object({}),
+    component: function SiteHeader() {
+        const {site} = useShared()
+        return (
             <header className="site">
                 <a className="logo" href={site.root || './'}>
                     {/* In a picture, so that React writes no preload link before the header for it. */}
@@ -38,27 +43,6 @@ export function Top({site}: {site: SiteContext}) {
                     ))}
                 </nav>
             </header>
-            <Band site={site} />
-        </>
-    )
-}
-
-/** Which build of the site this is: the commit on preview, the version on release. */
-function Band({site}: {site: SiteContext}) {
-    if (site.channel === 'release') {
-        return <p className="band">webcpp {site.version}</p>
-    }
-    return <p className="band">Preview of main at <code>{site.commit.slice(0, 7)}</code>, {site.date}</p>
-}
-
-export function Bottom() {
-    return (
-        <footer className="site">
-            <p>
-                webcpp is free software, under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost
-                Software License 1.0</a>. Its source is <a href="https://github.com/webcpporg/webcpp">on
-                GitHub</a>.
-            </p>
-        </footer>
-    )
-}
+        )
+    },
+})
