@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title">
+<!--
+  Copyright (c) 2026 WebCpp.org
+
+  Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file LICENSE_1_0.txt or copy at
+  https://www.boost.org/LICENSE_1_0.txt)
+
+  Concept b3, a variation of b for the owner's choice (Task 8): the web embraced by C++. The
+  web's globe whose left and right edges are C++'s braces, { and }, meeting at the poles; inside,
+  its meridian and its equator.
+  Two colours: the braces in ink, the meridian and the equator in the accent.
+-->
+<title id="title">webcpp</title>
+<style>
+.ink { stroke: #1d1d1f; }
+.acc { stroke: #5b3fd9; }
+@media (prefers-color-scheme: dark) {
+  .ink { stroke: #f5f5f7; }
+  .acc { stroke: #9d8cff; }
+}
+</style>
+<g fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+  <path class="ink" d="M32 7C20 7 15.5 9.5 15.5 17V25C15.5 29 13 32 8 32C13 32 15.5 35 15.5 39V47C15.5 54.5 20 57 32 57M32 7C44 7 48.5 9.5 48.5 17V25C48.5 29 51 32 56 32C51 32 48.5 35 48.5 39V47C48.5 54.5 44 57 32 57"/>
+  <g class="acc">
+    <ellipse cx="32" cy="32" rx="7.5" ry="25"/>
+    <path d="M21.5 32H42.5"/>
+  </g>
+</g>
+</svg>

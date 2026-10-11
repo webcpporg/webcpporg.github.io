@@ -5,19 +5,41 @@ Distributed under the Boost Software License, Version 1.0. (See
 accompanying file LICENSE_1_0.txt or copy at
 https://www.boost.org/LICENSE_1_0.txt)
 
-The home page redesigned, with the three logo concepts of design/logo-*.svg, for the owner's
-choice (Task 8, gate G3). One self-contained page: no font, image or script is fetched. The home
+The home page redesigned, with the three variations of the owner's concept b, the web's globe
+embraced by C++'s brackets (design/logo-b1.svg, logo-b2.svg and logo-b3.svg), for his choice
+(Task 8, gate G3), and the two accents he can choose between. One self-contained page: no font, image or script is fetched. The home
 is drawn twice, at 360 and at 1280 px, each in a frame scaled to fit the window, and laid out by
 container queries on its own width where the site will use media queries on the window's.
 -->
 <!doctype html>
-<html lang="en" data-logo="a">
+<html lang="en" data-logo="b1">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>webcpp home mockup</title>
 <style>
-/* The tokens: the site's light set here, its dark set below; one accent, a violet. */
+/*
+ * The tokens: the site's light set here, its dark set below; one accent, violet or blue. Each
+ * accent has a value for text and marks on the light background, one on the dark, and a fill under
+ * white text. Contrast, for text on the background and on the surface:
+ * | accent | light (on #ffffff / #f5f5f7) | dark (on #000000 / #1c1c1e) | fill, white text on it |
+ * | violet | #5b3fd9, 6.65 / 6.11          | #9d8cff, 7.63 / 6.18        | #5b3fd9 6.65, #6246ea 5.86 |
+ * | blue   | #0066cc, 5.57 / 5.11          | #3d9fff, 7.60 / 6.16        | #0066cc 5.57, both themes |
+ */
+:root {
+    --accent-light: #5b3fd9;
+    --accent-dark: #9d8cff;
+    --fill-light: #5b3fd9;
+    --fill-dark: #6246ea;
+}
+
+:root[data-accent="blue"] {
+    --accent-light: #0066cc;
+    --accent-dark: #3d9fff;
+    --fill-light: #0066cc;
+    --fill-dark: #0066cc;
+}
+
 :root {
     color-scheme: light dark;
     --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -27,10 +49,8 @@ container queries on its own width where the site will use media queries on the 
     --text: #1d1d1f;
     --muted: #6e6e73;
     --rule: #d2d2d7;
-    /* The accent as text on the background: 6.6 to 1 on white. */
-    --accent: #5b3fd9;
-    /* The accent as a fill under white text: 6.6 to 1 in light, 5.9 to 1 in dark. */
-    --accent-fill: #5b3fd9;
+    --accent: var(--accent-light);
+    --accent-fill: var(--fill-light);
     --on-accent: #ffffff;
     /* The mockup's own page around the frames. */
     --canvas: #f5f5f7;
@@ -46,9 +66,8 @@ container queries on its own width where the site will use media queries on the 
         --text: #f5f5f7;
         --muted: #a1a1a6;
         --rule: #38383a;
-        /* 7.6 to 1 on black. */
-        --accent: #9d8cff;
-        --accent-fill: #6246ea;
+        --accent: var(--accent-dark);
+        --accent-fill: var(--fill-dark);
         --canvas: #1c1c1e;
         --frame: #48484a;
     }
@@ -65,8 +84,8 @@ container queries on its own width where the site will use media queries on the 
     --text: #f5f5f7;
     --muted: #a1a1a6;
     --rule: #38383a;
-    --accent: #9d8cff;
-    --accent-fill: #6246ea;
+    --accent: var(--accent-dark);
+    --accent-fill: var(--fill-dark);
     --canvas: #1c1c1e;
     --frame: #48484a;
 }
@@ -212,7 +231,7 @@ svg.mark {
 .concept-head {
     display: flex;
     gap: 16px;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .concept h2 {
@@ -271,7 +290,7 @@ svg.mark {
 
 .tab.on-light {
     --mark-ink: #1d1d1f;
-    --mark-acc: #5b3fd9;
+    --mark-acc: var(--accent-light);
     background: #ffffff;
     box-shadow: inset 0 0 0 1px #d2d2d7;
     color: #1d1d1f;
@@ -279,7 +298,7 @@ svg.mark {
 
 .tab.on-dark {
     --mark-ink: #f5f5f7;
-    --mark-acc: #9d8cff;
+    --mark-acc: var(--accent-dark);
     background: #2c2c2e;
     color: #f5f5f7;
 }
@@ -312,19 +331,19 @@ svg.mark {
 .icon.on-accent {
     --mark-ink: #ffffff;
     --mark-acc: #ffffff;
-    background: #5b3fd9;
+    background: var(--fill-light);
 }
 
 .icon.on-white {
     --mark-ink: #1d1d1f;
-    --mark-acc: #5b3fd9;
+    --mark-acc: var(--accent-light);
     background: #ffffff;
     box-shadow: inset 0 0 0 1px #d2d2d7;
 }
 
 .icon.on-black {
     --mark-ink: #f5f5f7;
-    --mark-acc: #9d8cff;
+    --mark-acc: var(--accent-dark);
     background: #000000;
     box-shadow: inset 0 0 0 1px #38383a;
 }
@@ -382,9 +401,15 @@ svg.mark {
     }
 }
 
+/* Side by side, the three cards share their rows, so that their swatches line up. */
 @container stage (min-width: 900px) {
     .concepts {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .concept {
+        grid-row: span 4;
+        grid-template-rows: subgrid;
     }
 }
 
@@ -509,7 +534,7 @@ svg.mark {
     padding: 0 var(--gutter);
 }
 
-/* The hero: the logo large, its two parts meeting once as the page opens, then the headline. */
+/* The hero: the logo large, its brackets closing once round the globe as the page opens, then the headline. */
 
 .home .hero {
     display: grid;
@@ -575,25 +600,29 @@ svg.mark {
     color: var(--accent);
 }
 
+.meet use {
+    transform-origin: 50% 50%;
+}
+
 .meet use[data-part="ink"] {
-    animation: meet-ink 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation: embrace 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .meet use[data-part="acc"] {
-    animation: meet-acc 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation: appear 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
-@keyframes meet-ink {
+@keyframes embrace {
     from {
         opacity: 0;
-        transform: translateX(-10px);
+        transform: scaleX(1.25);
     }
 }
 
-@keyframes meet-acc {
+@keyframes appear {
     from {
         opacity: 0;
-        transform: translateX(10px);
+        transform: scale(0.7);
     }
 }
 
@@ -866,55 +895,60 @@ svg.mark {
 
 <!--
 The three marks, each as two parts, the ink's and the accent's, so that one colour or two is a
-matter of two custom properties, and the hero can bring its two parts together.
+matter of two custom properties, and the hero can close the brackets round the globe.
 -->
 <svg class="sprite" aria-hidden="true" focusable="false">
-    <defs>
-        <mask id="c-w-under" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-            <rect width="64" height="64" fill="#fff"/>
-            <path d="M28.73 18.5A15 15 0 0 1 34.3 23.14" fill="none" stroke="#000" stroke-width="10"/>
-        </mask>
-        <mask id="c-c-under" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-            <rect width="64" height="64" fill="#fff"/>
-            <path d="M32.45 46.54A7.5 15 0 0 1 28.53 41.58" fill="none" stroke="#000" stroke-width="10"/>
-        </mask>
-    </defs>
-    <symbol id="mark-a-ink" viewBox="0 0 64 64">
-        <circle cx="32" cy="32" r="26.5" fill="none" stroke-width="5" style="stroke: var(--mark-ink)"/>
+    <symbol id="mark-b1-ink" viewBox="0 0 64 64">
+        <path d="M17 8C12 8 10.5 10 10.5 14.5V25C10.5 29 8.5 32 4.5 32C8.5 32 10.5 35 10.5 39V49.5C10.5 54 12 56 17 56M47 8C52 8 53.5 10 53.5 14.5V25C53.5 29 55.5 32 59.5 32C55.5 32 53.5 35 53.5 39V49.5C53.5 54 52 56 47 56" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--mark-ink)"/>
     </symbol>
-    <symbol id="mark-a-acc" viewBox="0 0 64 64">
-        <g fill="none" stroke-width="5" style="stroke: var(--mark-acc)">
-            <ellipse cx="32" cy="32" rx="11" ry="26.5"/>
-            <path d="M14 32H28M36 32H50"/>
+    <symbol id="mark-b1-acc" viewBox="0 0 64 64">
+        <g fill="none" stroke-width="4" stroke-linecap="round" style="stroke: var(--mark-acc)">
+            <circle cx="32" cy="32" r="14"/>
+            <ellipse cx="32" cy="32" rx="5.5" ry="14"/>
+            <path d="M18 32H46"/>
         </g>
     </symbol>
-    <symbol id="mark-b-ink" viewBox="0 0 64 64">
-        <path d="M27 8C21 8 19 10 19 15V20M19 44V49C19 54 21 56 27 56M37 8C43 8 45 10 45 15V20M45 44V49C45 54 43 56 37 56" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--mark-ink)"/>
+    <symbol id="mark-b2-ink" viewBox="0 0 64 64">
+        <path d="M26 7C21 7 19 9 19 14V20L7 32L19 44V50C19 55 21 57 26 57M38 7C43 7 45 9 45 14V20L57 32L45 44V50C45 55 43 57 38 57" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--mark-ink)"/>
     </symbol>
-    <symbol id="mark-b-acc" viewBox="0 0 64 64">
-        <path d="M19 20L7 32L19 44M45 20L57 32L45 44" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--mark-acc)"/>
+    <symbol id="mark-b2-acc" viewBox="0 0 64 64">
+        <g fill="none" stroke-width="3.5" stroke-linecap="round" style="stroke: var(--mark-acc)">
+            <circle cx="32" cy="32" r="12"/>
+            <ellipse cx="32" cy="32" rx="5" ry="12"/>
+            <path d="M20 32H44"/>
+        </g>
     </symbol>
-    <symbol id="mark-c-ink" viewBox="0 0 64 64">
-        <path d="M35.19 24.5A15 15 0 1 0 30.26 44.65" mask="url(#c-c-under)" fill="none" stroke-width="5.5" stroke-linecap="round" style="stroke: var(--mark-ink)"/>
+    <symbol id="mark-b3-ink" viewBox="0 0 64 64">
+        <path d="M32 7C20 7 15.5 9.5 15.5 17V25C15.5 29 13 32 8 32C13 32 15.5 35 15.5 39V47C15.5 54.5 20 57 32 57M32 7C44 7 48.5 9.5 48.5 17V25C48.5 29 51 32 56 32C51 32 48.5 35 48.5 39V47C48.5 54.5 44 57 32 57" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--mark-ink)"/>
     </symbol>
-    <symbol id="mark-c-acc" viewBox="0 0 64 64">
-        <path d="M26.8 32A15 15 0 0 1 56.8 32A7.5 15 0 0 1 41.8 32A7.5 15 0 0 1 26.8 32Z" mask="url(#c-w-under)" fill="none" stroke-width="5.5" stroke-linejoin="round" style="stroke: var(--mark-acc)"/>
+    <symbol id="mark-b3-acc" viewBox="0 0 64 64">
+        <g fill="none" stroke-width="5" stroke-linecap="round" style="stroke: var(--mark-acc)">
+            <ellipse cx="32" cy="32" rx="7.5" ry="25"/>
+            <path d="M21.5 32H42.5"/>
+        </g>
     </symbol>
 </svg>
 
 <div class="sheet">
     <header class="intro">
         <h1>webcpp home mockup</h1>
-        <p>Three logos for webcpp, each joining a sign of C++ with a sign of the web, and the home
-        page redesigned around the one chosen: the same content as today's, at 360&nbsp;px and at 1280&nbsp;px.
-        Choose a logo to see it in the home.</p>
+        <p>Three variations of the brackets, the web's globe embraced by C++'s braces, and the
+        home page redesigned around the one chosen: the same content as today's, at 360&nbsp;px and
+        at 1280&nbsp;px. Choose a logo to see it in the home, and an accent to see it everywhere.</p>
         <div class="controls">
             <fieldset class="toggle">
                 <legend>Logo</legend>
                 <div class="options">
-                    <button type="button" data-set-logo="a" aria-pressed="true">a, globe</button>
-                    <button type="button" data-set-logo="b" aria-pressed="false">b, brackets</button>
-                    <button type="button" data-set-logo="c" aria-pressed="false">c, rings</button>
+                    <button type="button" data-set-logo="b1" aria-pressed="true">b1, braces</button>
+                    <button type="button" data-set-logo="b2" aria-pressed="false">b2, brackets</button>
+                    <button type="button" data-set-logo="b3" aria-pressed="false">b3, globe</button>
+                </div>
+            </fieldset>
+            <fieldset class="toggle">
+                <legend>Accent</legend>
+                <div class="options">
+                    <button type="button" data-set-accent="violet" aria-pressed="true">Violet</button>
+                    <button type="button" data-set-accent="blue" aria-pressed="false">Blue</button>
                 </div>
             </fieldset>
             <fieldset class="toggle">
@@ -929,86 +963,86 @@ matter of two custom properties, and the hero can bring its two parts together.
     </header>
 
     <ul class="concepts">
-        <li class="concept" data-concept="a" aria-current="true">
+        <li class="concept" data-concept="b1" aria-current="true">
             <div class="concept-head">
-                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>
+                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-b1-ink"/><use href="#mark-b1-acc"/></svg>
                 <div>
-                    <h2>a. The globe</h2>
-                    <p>The web's globe, whose two meridians are the upright strokes of C++'s two plus signs.</p>
+                    <h2>b1. The braces</h2>
+                    <p>C++'s braces round the web's globe, a circle with one meridian and the equator: the web embraced by C++.</p>
                 </div>
             </div>
             <div>
                 <p class="swatch-label">Favicon, 16 px</p>
                 <div class="tabs">
-                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>webcpp</span>
-                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>webcpp</span>
-                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>webcpp</span>
-                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg>webcpp</span>
+                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b1-ink"/><use href="#mark-b1-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b1-ink"/><use href="#mark-b1-acc"/></svg>webcpp</span>
+                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b1-ink"/><use href="#mark-b1-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b1-ink"/><use href="#mark-b1-acc"/></svg>webcpp</span>
                 </div>
             </div>
             <div>
                 <p class="swatch-label">App icon, 512 px, drawn at 96</p>
                 <div class="icons">
-                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg></span>
-                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg></span>
-                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-a-ink"/><use href="#mark-a-acc"/></svg></span>
+                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b1-ink"/><use href="#mark-b1-acc"/></svg></span>
+                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b1-ink"/><use href="#mark-b1-acc"/></svg></span>
+                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b1-ink"/><use href="#mark-b1-acc"/></svg></span>
                 </div>
             </div>
-            <button type="button" class="choose" data-set-logo="a">Show in the home</button>
+            <button type="button" class="choose" data-set-logo="b1">Show in the home</button>
         </li>
-        <li class="concept" data-concept="b" aria-current="false">
+        <li class="concept" data-concept="b2" aria-current="false">
             <div class="concept-head">
-                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>
+                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-b2-ink"/><use href="#mark-b2-acc"/></svg>
                 <div>
-                    <h2>b. The brackets</h2>
-                    <p>C++'s braces, whose middle points open into the web's angle brackets: each pair one stroke.</p>
+                    <h2>b2. The brackets</h2>
+                    <p>Concept b's brackets, each brace's middle opened into an angle bracket, holding the globe between their four joints.</p>
                 </div>
             </div>
             <div>
                 <p class="swatch-label">Favicon, 16 px</p>
                 <div class="tabs">
-                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>webcpp</span>
-                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>webcpp</span>
-                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>webcpp</span>
-                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg>webcpp</span>
+                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b2-ink"/><use href="#mark-b2-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b2-ink"/><use href="#mark-b2-acc"/></svg>webcpp</span>
+                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b2-ink"/><use href="#mark-b2-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b2-ink"/><use href="#mark-b2-acc"/></svg>webcpp</span>
                 </div>
             </div>
             <div>
                 <p class="swatch-label">App icon, 512 px, drawn at 96</p>
                 <div class="icons">
-                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg></span>
-                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg></span>
-                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b-ink"/><use href="#mark-b-acc"/></svg></span>
+                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b2-ink"/><use href="#mark-b2-acc"/></svg></span>
+                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b2-ink"/><use href="#mark-b2-acc"/></svg></span>
+                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b2-ink"/><use href="#mark-b2-acc"/></svg></span>
                 </div>
             </div>
-            <button type="button" class="choose" data-set-logo="b">Show in the home</button>
+            <button type="button" class="choose" data-set-logo="b2">Show in the home</button>
         </li>
-        <li class="concept" data-concept="c" aria-current="false">
+        <li class="concept" data-concept="b3" aria-current="false">
             <div class="concept-head">
-                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>
+                <svg class="mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><use href="#mark-b3-ink"/><use href="#mark-b3-acc"/></svg>
                 <div>
-                    <h2>c. The rings</h2>
-                    <p>Two linked rings, as the web's link is drawn: a C for C++, and a ring closing over a W for the web.</p>
+                    <h2>b3. The globe of braces</h2>
+                    <p>The globe's own left and right edges drawn as braces, meeting at the poles, round its meridian and its equator.</p>
                 </div>
             </div>
             <div>
                 <p class="swatch-label">Favicon, 16 px</p>
                 <div class="tabs">
-                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>webcpp</span>
-                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>webcpp</span>
-                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>webcpp</span>
-                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg>webcpp</span>
+                    <span class="tab on-light"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b3-ink"/><use href="#mark-b3-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b3-ink"/><use href="#mark-b3-acc"/></svg>webcpp</span>
+                    <span class="tab on-light one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b3-ink"/><use href="#mark-b3-acc"/></svg>webcpp</span>
+                    <span class="tab on-dark one-colour"><svg class="mark" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><use href="#mark-b3-ink"/><use href="#mark-b3-acc"/></svg>webcpp</span>
                 </div>
             </div>
             <div>
                 <p class="swatch-label">App icon, 512 px, drawn at 96</p>
                 <div class="icons">
-                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg></span>
-                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg></span>
-                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-c-ink"/><use href="#mark-c-acc"/></svg></span>
+                    <span class="icon on-accent"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b3-ink"/><use href="#mark-b3-acc"/></svg></span>
+                    <span class="icon on-white"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b3-ink"/><use href="#mark-b3-acc"/></svg></span>
+                    <span class="icon on-black"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark-b3-ink"/><use href="#mark-b3-acc"/></svg></span>
                 </div>
             </div>
-            <button type="button" class="choose" data-set-logo="c">Show in the home</button>
+            <button type="button" class="choose" data-set-logo="b3">Show in the home</button>
         </li>
     </ul>
 
@@ -1019,7 +1053,7 @@ matter of two custom properties, and the hero can bring its two parts together.
             <div class="device phone">
                 <div class="home">
                     <div class="site-header">
-                        <a class="brand" href="#home"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-a-ink"/><use data-part="acc" href="#mark-a-acc"/></svg>webcpp</a>
+                        <a class="brand" href="#home"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-b1-ink"/><use data-part="acc" href="#mark-b1-acc"/></svg>webcpp</a>
                         <details class="menu">
                             <summary><svg viewBox="0 0 18 18" fill="none" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 5H16M2 9H16M2 13H16"/></svg>Menu</summary>
                             <div class="menu-list">
@@ -1037,7 +1071,7 @@ matter of two custom properties, and the hero can bring its two parts together.
                     <p class="band">Preview of main at <code>b6caf67</code>, 2026-10-11</p>
                     <div class="main">
                         <div class="hero">
-                            <div class="mark-wrap"><svg class="mark meet" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-a-ink"/><use data-part="acc" href="#mark-a-acc"/></svg></div>
+                            <div class="mark-wrap"><svg class="mark meet" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-b1-ink"/><use data-part="acc" href="#mark-b1-acc"/></svg></div>
                             <div>
                                 <h1>Where C++ and the web meet</h1>
                                 <p class="lede">webcpp brings the best of C++ to the web, and the libraries web developers use most to C++, for everyone who builds decentralized applications.</p>
@@ -1083,7 +1117,7 @@ matter of two custom properties, and the hero can bring its two parts together.
             <div class="device desktop">
                 <div class="home">
                     <div class="site-header">
-                        <a class="brand" href="#home"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-a-ink"/><use data-part="acc" href="#mark-a-acc"/></svg>webcpp</a>
+                        <a class="brand" href="#home"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-b1-ink"/><use data-part="acc" href="#mark-b1-acc"/></svg>webcpp</a>
                         <div class="site-nav">
                             <a href="#libraries">Libraries</a>
                             <a href="#cpp">C++</a>
@@ -1098,7 +1132,7 @@ matter of two custom properties, and the hero can bring its two parts together.
                     <p class="band">Preview of main at <code>b6caf67</code>, 2026-10-11</p>
                     <div class="main">
                         <div class="hero">
-                            <div class="mark-wrap"><svg class="mark meet" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-a-ink"/><use data-part="acc" href="#mark-a-acc"/></svg></div>
+                            <div class="mark-wrap"><svg class="mark meet" viewBox="0 0 64 64" aria-hidden="true"><use data-part="ink" href="#mark-b1-ink"/><use data-part="acc" href="#mark-b1-acc"/></svg></div>
                             <div>
                                 <h1>Where C++ and the web meet</h1>
                                 <p class="lede">webcpp brings the best of C++ to the web, and the libraries web developers use most to C++, for everyone who builds decentralized applications.</p>
@@ -1144,7 +1178,8 @@ matter of two custom properties, and the hero can bring its two parts together.
 
 <script>
 /**
- * The two toggles: which logo the home shows, and the theme; the hero's mark meets again on a change.
+ * The three toggles: which logo the home shows, the theme and the accent; the hero's mark closes
+ * round the globe again when the logo changes.
  */
 const root = document.documentElement
 
@@ -1179,6 +1214,15 @@ function setTheme(theme) {
     press('data-set-theme', theme)
 }
 
+function setAccent(accent) {
+    if (accent === 'violet') {
+        delete root.dataset.accent
+    } else {
+        root.dataset.accent = accent
+    }
+    press('data-set-accent', accent)
+}
+
 document.addEventListener('click', event => {
     const logo = event.target.closest('[data-set-logo]')
     if (logo) {
@@ -1187,6 +1231,10 @@ document.addEventListener('click', event => {
     const theme = event.target.closest('[data-set-theme]')
     if (theme) {
         setTheme(theme.dataset.setTheme)
+    }
+    const accent = event.target.closest('[data-set-accent]')
+    if (accent) {
+        setAccent(accent.dataset.setAccent)
     }
 })
 </script>

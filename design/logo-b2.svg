@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title">
+<!--
+  Copyright (c) 2026 WebCpp.org
+
+  Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file LICENSE_1_0.txt or copy at
+  https://www.boost.org/LICENSE_1_0.txt)
+
+  Concept b2, a variation of b for the owner's choice (Task 8): the web embraced by C++. b's
+  brackets, each brace's middle opened into an angle bracket, { into < and } into >, hold the
+  web's globe between their four joints.
+  Two colours: the brackets in ink, the globe in the accent.
+-->
+<title id="title">webcpp</title>
+<style>
+.ink { stroke: #1d1d1f; }
+.acc { stroke: #5b3fd9; }
+@media (prefers-color-scheme: dark) {
+  .ink { stroke: #f5f5f7; }
+  .acc { stroke: #9d8cff; }
+}
+</style>
+<g fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+  <path class="ink" d="M26 7C21 7 19 9 19 14V20L7 32L19 44V50C19 55 21 57 26 57M38 7C43 7 45 9 45 14V20L57 32L45 44V50C45 55 43 57 38 57"/>
+  <g class="acc" stroke-width="3.5">
+    <circle cx="32" cy="32" r="12"/>
+    <ellipse cx="32" cy="32" rx="5" ry="12"/>
+    <path d="M20 32H44"/>
+  </g>
+</g>
+</svg>
