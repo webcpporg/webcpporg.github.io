@@ -60,4 +60,7 @@ C++ developer never runs one directly.
 | --- | --- |
 | `Jamfile` | the site's targets; `b2 site`, at the superproject, runs them |
 | `package.json`, `package-lock.json` | the site's own node dependencies, pinned |
+| `src/` | the components pages are written with, and the renderer: `server.tsx` prerenders a page, `client.tsx` hydrates it in the browser |
+| `assets/` | the styles and the logo, copied to the site's `assets/` |
+| `tools/build.mjs` | the `build` script: the bundles, and the pages rendered to HTML |
 | `test/` | the site's checks |
