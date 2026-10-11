@@ -14,9 +14,12 @@
 // mean. Each file is served with its type, wasm, the web manifest and modules among them, and
 // without caching, so that a reload shows the last build. A directory is its index.html, reached
 // with its final slash, which the site's relative links need: a path to one without it is
-// redirected there. Nothing outside the directory is served. A file that goes missing for the
-// moment dev's rebuild swaps the directory (tools/dev.mjs) is retried, then answered 503; the
-// server never ends on it.
+// redirected there. Nothing outside the directory is served. dev.mjs serves through a link it
+// swaps onto a fresh build (pointTo): a root that has been there and goes briefly missing (the
+// swap's own gap, real only on Windows, which cannot rename a link onto one already there) is
+// waited for, bounded, then answered 503, never the 404 a root that simply never held the path
+// gets at once; a file that goes missing once its root is there is retried the same way, then
+// answered 503 too. Neither case, nor a fault of the stream itself, ever ends the process on it.
 
 import {open, stat} from 'node:fs/promises'
 import {createServer} from 'node:http'
@@ -44,30 +47,56 @@ const types = {
     '.woff2': 'font/woff2',
 }
 
-// dev.mjs rebuilds by removing the served directory and renaming the next build onto it
-// (tools/dev.mjs, build()): a request already resolved to a file there may find it gone for the
-// moment the swap takes. Ten retries, 10ms apart, cover that window without the reader noticing;
-// past it, the file is answered 503, to try again, never left to an unhandled stream error, which
-// would otherwise end the process.
-const REBUILD_RETRIES = 10
-const REBUILD_DELAY_MS = 10
+// dev.mjs swaps the link it serves through onto a fresh build (tools/dev.mjs, pointTo()): on
+// Windows alone, which cannot rename a link onto one already there, the old link is removed
+// first, a real gap. Five retries, 20ms apart, cover it without a reader noticing; a file within
+// an otherwise-present root is retried the same way, for the narrower case of one file gone on
+// its own; past either, the request is answered 503, to try again, never left to a 404 that would
+// misreport a build in progress as a missing page, nor to an unhandled stream error, which would
+// otherwise end the process.
+const SWAP_RETRIES = 5
+const SWAP_DELAY_MS = 20
+
+/** Waits, bounded, for `missing()` (a root or a file, each checked its own way) to stop being
+ * true, retrying `found()` after each wait; its result once `missing()` is false, or null once
+ * it still is after every retry. */
+async function retried(missing, found) {
+    for (let attempt = 0; ; attempt++) {
+        if (!(await missing())) {
+            return await found()
+        }
+        if (attempt === SWAP_RETRIES) {
+            return null
+        }
+        await sleep(SWAP_DELAY_MS)
+    }
+}
+
+/** Whether `root` is there right now, a directory or what resolves to one (a symlink or a
+ * junction): false only in the gap pointTo's own rename may leave on Windows, or before the first
+ * build ever runs. */
+async function exists(root) {
+    const entry = await stat(root).catch(() => null)
+    return entry !== null && entry.isDirectory()
+}
+
+/** Whether `file` is there right now, a plain file. */
+async function fileExists(file) {
+    const entry = await stat(file).catch(() => null)
+    return entry !== null && entry.isFile()
+}
 
 /**
- * `file`, open for reading, retried while it is missing (dev's rebuild swapping the directory),
- * or null once it still is after every retry: a stream only ever opens a file this found, so a
- * fault once it is reading is never the swap, and is let through as the stream's own 'error'.
+ * `file`, open for reading, retried while it is missing on its own (its root is there, as
+ * `fileOf` already found it, but the file itself briefly is not), or null once it still is after
+ * every retry: a stream only ever opens a file this found, so a fault once it is reading is
+ * never this gap, and is let through as the stream's own 'error'.
  */
 export async function opened(file) {
-    for (let attempt = 0; ; attempt++) {
-        try {
-            return await open(file, 'r')
-        } catch (error) {
-            if (error.code !== 'ENOENT' || attempt === REBUILD_RETRIES) {
-                return null
-            }
-            await sleep(REBUILD_DELAY_MS)
-        }
-    }
+    return retried(
+        async () => !(await fileExists(file)),
+        () => open(file, 'r').catch(() => null),
+    )
 }
 
 /** The file of `root` that `path` names, a directory standing for its index.html, or null. */
@@ -83,8 +112,42 @@ async function fileOf(root, path) {
     return entry?.isFile() ? {file, directory: false} : null
 }
 
-/** The answer to one request, from the first of `roots` that holds its path. */
-async function answer(roots, request, response) {
+const unavailable = response => response.writeHead(503, {'content-type': types['.txt'], 'retry-after': '1'})
+    .end('The site is being built again; try once more.\n')
+
+/** Answers `found` (fileOf's), a redirect to its final slash for a directory without one, its
+ * type and no caching otherwise, HEAD ending there, GET streamed from the file opened (retried),
+ * 503 if that still fails. */
+async function respond(found, path, url, request, response) {
+    if (found.directory && !path.endsWith('/')) {
+        response.writeHead(301, {location: `${url.pathname}/${url.search}`}).end()
+        return
+    }
+    const headers = {
+        'content-type': types[extname(found.file)] ?? 'application/octet-stream',
+        'cache-control': 'no-cache',
+    }
+    if (request.method === 'HEAD') {
+        response.writeHead(200, headers).end()
+        return
+    }
+    const handle = await opened(found.file)
+    if (!handle) {
+        unavailable(response)
+        return
+    }
+    response.writeHead(200, headers)
+    // The stream closes handle itself once it is done: handle.close() afterwards would race it.
+    const stream = handle.createReadStream()
+    stream.once('error', () => response.destroy())
+    stream.pipe(response)
+}
+
+/** The answer to one request, from the first of `roots` that holds its path: `everSeen`, shared
+ * across requests, remembers which roots have been there, so a root that simply never held
+ * anything (serve({roots: [out, cache]})'s cache, before an example has wasm) is never waited for,
+ * only one that was there and has gone briefly missing, the swap's own gap. */
+async function answer(roots, everSeen, request, response) {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
         response.writeHead(405, {allow: 'GET, HEAD'}).end()
         return
@@ -97,35 +160,24 @@ async function answer(roots, request, response) {
         // A malformed escape names no file.
     }
     for (const root of path === null || path.includes('\0') ? [] : roots) {
+        if (await exists(root)) {
+            everSeen.add(root)
+        } else if (everSeen.has(root)) {
+            // root has been there before and is briefly gone now: pointTo's own gap
+            // (tools/dev.mjs), waited for, bounded, rather than answered the 404 a root that
+            // simply never held path would get at once.
+            if (!(await retried(async () => !(await exists(root)), async () => true))) {
+                unavailable(response)
+                return
+            }
+        } else {
+            continue
+        }
         const found = await fileOf(root, path)
         if (!found) {
             continue
         }
-        if (found.directory && !path.endsWith('/')) {
-            response.writeHead(301, {location: `${url.pathname}/${url.search}`}).end()
-            return
-        }
-        if (request.method === 'HEAD') {
-            response.writeHead(200, {
-                'content-type': types[extname(found.file)] ?? 'application/octet-stream',
-                'cache-control': 'no-cache',
-            }).end()
-            return
-        }
-        const handle = await opened(found.file)
-        if (!handle) {
-            response.writeHead(503, {'content-type': types['.txt'], 'retry-after': '1'})
-                .end('The site is being built again; try once more.\n')
-            return
-        }
-        response.writeHead(200, {
-            'content-type': types[extname(found.file)] ?? 'application/octet-stream',
-            'cache-control': 'no-cache',
-        })
-        // The stream closes handle itself once it is done: handle.close() afterwards would race it.
-        const stream = handle.createReadStream()
-        stream.once('error', () => response.destroy())
-        stream.pipe(response)
+        await respond(found, path, url, request, response)
         return
     }
     response.writeHead(404, {'content-type': types['.txt']}).end(`Not found: ${url.pathname}\n`)
@@ -137,8 +189,9 @@ async function answer(roots, request, response) {
  */
 export function serve({roots, port = defaultPort}) {
     const absolute = roots.map(root => resolve(root))
+    const everSeen = new Set()
     const server = createServer((request, response) => {
-        answer(absolute, request, response).catch(error => {
+        answer(absolute, everSeen, request, response).catch(error => {
             response.writeHead(500, {'content-type': types['.txt']}).end(`${error.message}\n`)
         })
     })

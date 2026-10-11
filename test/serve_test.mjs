@@ -9,11 +9,12 @@
 // which the site's relative links need; nothing outside the directory is served.
 
 import assert from 'node:assert/strict'
-import {mkdirSync, mkdtempSync, unlinkSync, writeFileSync} from 'node:fs'
+import {mkdirSync, mkdtempSync, rmSync, unlinkSync, writeFileSync} from 'node:fs'
 import {request} from 'node:http'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import test from 'node:test'
+import {setTimeout as sleep} from 'node:timers/promises'
 import {opened, serve} from '../tools/serve.mjs'
 
 const work = mkdtempSync(join(tmpdir(), 'webcpp-serve-'))
@@ -72,7 +73,7 @@ test('a directory without its slash is redirected to it, and nothing outside the
     }
 })
 
-test('a file briefly missing, as dev\'s rebuild swap (rm-rf then rename) leaves it, is retried and opens once it is back', async () => {
+test('a file briefly missing on its own is retried and opens once it is back', async () => {
     const file = join(work, 'swap.txt')
     writeFileSync(file, 'first')
     unlinkSync(file)
@@ -89,6 +90,56 @@ test('a file briefly missing, as dev\'s rebuild swap (rm-rf then rename) leaves 
 
 test('a file still missing past every retry answers null, never an unhandled stream error', async () => {
     assert.equal(await opened(join(work, 'never written.txt')), null)
+})
+
+test('a root that has been there and goes briefly missing is waited for, never answered the 404 that root would otherwise get at once', async t => {
+    const swapped = join(work, 'swapped-root')
+    mkdirSync(swapped)
+    writeFileSync(join(swapped, 'index.html'), '<!doctype html><title>swapped</title>')
+    const server = await serve({roots: [swapped], port: 0})
+    t.after(() => server.close())
+    const {port} = server.address()
+    assert.equal((await get(port, '/')).status, 200, 'the root is there to begin with')
+    rmSync(swapped, {recursive: true, force: true})
+    const timer = setTimeout(() => {
+        mkdirSync(swapped)
+        writeFileSync(join(swapped, 'index.html'), '<!doctype html><title>back</title>')
+    }, 40)
+    try {
+        const answer = await get(port, '/')
+        assert.equal(answer.status, 200, answer.body)
+        assert.match(answer.body, /back/)
+    } finally {
+        clearTimeout(timer)
+    }
+})
+
+test('a root that has been there and stays missing is answered 503, never a 404 that would misreport a build in progress', async t => {
+    const swapped = join(work, 'swapped-root-gone')
+    mkdirSync(swapped)
+    writeFileSync(join(swapped, 'index.html'), '<!doctype html><title>gone soon</title>')
+    const server = await serve({roots: [swapped], port: 0})
+    t.after(() => server.close())
+    const {port} = server.address()
+    assert.equal((await get(port, '/')).status, 200)
+    rmSync(swapped, {recursive: true, force: true})
+    const answer = await get(port, '/')
+    assert.equal(answer.status, 503, answer.body)
+    assert.equal(answer.headers['retry-after'], '1')
+    mkdirSync(swapped)
+    writeFileSync(join(swapped, 'index.html'), '<!doctype html><title>restored</title>')
+    await sleep(0)
+})
+
+test('a root that has never held anything is never waited for: a missing file there is a plain 404', async t => {
+    const never = join(work, 'never-built')
+    const server = await serve({roots: [never], port: 0})
+    t.after(() => server.close())
+    const {port} = server.address()
+    const started = Date.now()
+    const answer = await get(port, '/')
+    assert.equal(answer.status, 404, answer.body)
+    assert.ok(Date.now() - started < 50, 'a root that never existed is answered at once, not waited for')
 })
 
 test('a file missing from the first directory is served from the next', async t => {

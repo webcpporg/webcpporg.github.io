@@ -8,19 +8,23 @@
 //
 //   dev.mjs [port]
 //
-// builds the site's own pages with test/fixtures/catalogue.json and a fixed context into
-// build/dev/site/, serves them on 127.0.0.1, by default on port 8765, and builds them again on a
-// change under pages/, src/ or assets/; a build that fails is reported and the last good one stays
-// served. The examples' wasm is served from build/dev/wasm/: copied from the superproject's
-// bin/site/ when its b2 site built some, else downloaded once from the published preview and
-// checked against the preview's precache.json. That download is the one access to the network
-// outside `npm ci`, and it happens only here, never in a build or a test; without the network the
-// pages are still served, without the examples' wasm.
+// builds the site's own pages with test/fixtures/catalogue.json and a fixed context into a fresh
+// directory under build/dev/builds/ each time, serves them through build/dev/site, a symlink
+// (a junction on Windows) swapped onto the new one with one rename (pointTo), on 127.0.0.1, by
+// default on port 8765, and builds them again on a change under pages/, src/ or assets/; a build
+// that fails is reported and the last good one stays served. Swapping a link, never the directory
+// itself, means a request already resolving the old one keeps reading it, whichever of build()'s
+// steps a swap in progress is at (test/dev_test.mjs fires one at each); the previous build is
+// removed only once the swap itself has succeeded. The examples' wasm is served from build/dev/wasm/:
+// copied from the superproject's bin/site/ when its b2 site built some, else downloaded once from
+// the published preview and checked against the preview's precache.json. That download is the one
+// access to the network outside `npm ci`, and it happens only here, never in a build or a test;
+// without the network the pages are still served, without the examples' wasm.
 
 import {execFileSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
 import {existsSync, watch} from 'node:fs'
-import {cp, mkdir, readdir, readFile, rename, rm, writeFile} from 'node:fs/promises'
+import {cp, mkdir, readdir, readFile, readlink, rename, rm, symlink, writeFile} from 'node:fs/promises'
 import {dirname, join, relative, resolve, sep} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {defaultPort, host, serve} from './serve.mjs'
@@ -103,17 +107,58 @@ export async function exampleWasm({local, cache, base = preview, fetch = globalT
     return {from: base, files}
 }
 
-/** Builds the pages into `out`, through a directory of their own, so that a failed build leaves the last one. */
-async function build(dev, out) {
-    const next = join(dev, 'next')
+/**
+ * Makes `link` point to `target` (an absolute path), replacing what it pointed to before, with
+ * one rename of a link of its own, never of `link` itself until that rename: a symbolic link
+ * (`dir`) or, where Windows refuses one, a junction, as tools/node/install.py's made_link does.
+ * POSIX renames a link onto another atomically, so link is never briefly gone; Windows renames no
+ * link onto one that is already there, so it is removed first, a real (if short) gap, which
+ * serve.mjs's own retry is for. Returns the previous target, absolute, or null for none.
+ */
+export async function pointTo(link, target) {
+    const previous = await readlink(link).catch(() => null)
+    const next = `${link}.next-${process.pid}`
+    await rm(next, {recursive: true, force: true})
+    try {
+        await symlink(target, next, 'dir')
+    } catch (error) {
+        if (process.platform !== 'win32') {
+            throw error
+        }
+        await symlink(target, next, 'junction')
+    }
+    if (process.platform === 'win32' && existsSync(link)) {
+        await rm(link, {recursive: true, force: true})
+    }
+    await rename(next, link)
+    return previous
+}
+
+let builds = 0
+
+/**
+ * Builds the pages into a fresh directory under dev/builds/, then swaps the link `out` onto it
+ * (pointTo) and removes the directory the swap moved it away from, so a failed build leaves the
+ * link as it was and a reader is never served half of a new one. `hook(step)` runs after each
+ * step ('built', the pages are there but out still reads the last build; 'linked', out already
+ * reads this one; 'cleaned', the last build is gone), for a test to fire a request in the gap it
+ * names; it does nothing by default.
+ */
+export async function build(dev, out, hook = () => {}) {
+    const builtInto = join(dev, 'builds', `${Date.now()}-${process.pid}-${builds++}`)
     const contextFile = join(dev, 'context.json')
     const catalogue = JSON.parse(await readFile(join(site, 'test/fixtures/catalogue.json'), 'utf8'))
     await writeFile(contextFile, JSON.stringify({...context, catalogue}))
-    await rm(next, {recursive: true, force: true})
+    await mkdir(dirname(builtInto), {recursive: true})
     execFileSync(process.execPath, [join(site, 'tools/build.mjs'), '--bundle', '--render', '--pages',
-        join(site, 'pages'), '--out', next, '--context', contextFile], {stdio: 'inherit'})
-    await rm(out, {recursive: true, force: true})
-    await rename(next, out)
+        join(site, 'pages'), '--out', builtInto, '--context', contextFile], {stdio: 'inherit'})
+    await hook('built')
+    const previous = await pointTo(out, builtInto)
+    await hook('linked')
+    if (previous) {
+        await rm(previous, {recursive: true, force: true})
+    }
+    await hook('cleaned')
 }
 
 async function main() {
