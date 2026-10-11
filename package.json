@@ -5,7 +5,7 @@
     "license": "BSL-1.0",
     "scripts": {
         "build": "node tools/build.mjs",
-        "test": "node --test",
+        "test": "node --test 'test/**/*_test.mjs'",
         "typecheck": "tsc --noEmit",
         "dev": "node tools/dev.mjs",
         "serve": "node tools/serve.mjs"
