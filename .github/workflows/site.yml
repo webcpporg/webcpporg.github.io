@@ -1,0 +1,77 @@
+# Copyright (c) 2026 WebCpp.org
+#
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# https://www.boost.org/LICENSE_1_0.txt)
+
+# The site's checks, on every pull request and every push: its tests, its typecheck, and its own
+# pages bundled and rendered with the fixture catalogue of test/, each page then checked as valid
+# HTML with the rules b2 site checks it with. Nothing is published: the superproject's CI builds
+# the whole site with b2 site and publishes that build alone (webcpporg/webcpp,
+# .github/workflows/ci.yml).
+name: Site
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26.7.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # As the superproject's tools/node/install.py runs it: no package's install script reports
+      # the install.
+      - name: npm ci
+        env:
+          OPENUI_TELEMETRY_DISABLED: '1'
+          DO_NOT_TRACK: '1'
+        run: npm ci
+
+      - name: npm test
+        run: npm test
+
+      - name: npm run typecheck
+        run: npm run typecheck
+
+      # The context b2 site would give the pages, with the fixture catalogue in place of the one
+      # the superproject's libraries make, and this commit and its date.
+      - name: Build the pages with the fixture catalogue
+        run: |
+          work="$RUNNER_TEMP/site"
+          mkdir -p "$work"
+          node -e '
+            const fs = require("node:fs")
+            const [file, commit, date] = process.argv.slice(1)
+            const catalogue = JSON.parse(fs.readFileSync("test/fixtures/catalogue.json", "utf8"))
+            fs.writeFileSync(file, JSON.stringify(
+              {channel: "preview", commit, date, version: null, catalogue}))
+          ' "$work/context.json" "$GITHUB_SHA" "$(git log -1 --format=%cs)"
+          node tools/build.mjs --bundle --render --pages pages --out "$work/out" \
+            --context "$work/context.json" --chrome "$work/docs-header.html"
+
+      - name: Every page is valid HTML
+        run: |
+          find "$RUNNER_TEMP/site/out" -name '*.html' -print0 \
+            | xargs -0 node_modules/.bin/html-validate --config .htmlvalidate.json
