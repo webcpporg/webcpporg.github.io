@@ -13,6 +13,15 @@ export const bases = {
     release: 'https://webcpp.org/',
 } as const
 
+/**
+ * What each channel's pages tell a search engine: the preview is the development version, never
+ * indexed (the owner, 2026-10-11), and the release is what a search finds.
+ */
+export const robots = {
+    preview: 'noindex',
+    release: 'index, follow',
+} as const
+
 export const titleLimit = 60
 export const descriptionLimits = [120, 160] as const
 
@@ -21,6 +30,7 @@ export type Head = {
     title: string
     description: string
     canonical: string
+    robots: string
     image: string
     graph: GraphNode[]
 }
@@ -50,6 +60,7 @@ export function describe(site: SiteContext, title: string, description: string, 
         title: full,
         description,
         canonical,
+        robots: robots[site.channel],
         image: base + cardPath(site.path),
         graph: [...siteGraph(base, canonical, title, description, site.path), ...graph],
     }
@@ -74,7 +85,7 @@ export function writeHead(head: Head): string {
         `<title>${text(head.title)}</title>`,
         meta('name', 'description', head.description),
         `<link rel="canonical" href="${attribute(head.canonical)}">`,
-        meta('name', 'robots', 'index, follow'),
+        meta('name', 'robots', head.robots),
         meta('property', 'og:title', head.title),
         meta('property', 'og:description', head.description),
         meta('property', 'og:url', head.canonical),

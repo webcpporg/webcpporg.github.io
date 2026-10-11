@@ -114,7 +114,7 @@ test('the head carries every SEO tag the spec names', () => {
     for (const tag of [
         /<title>[^<]{1,60}<\/title>/, /<meta name="description" content="[^"]{120,160}">/,
         /<link rel="canonical" href="https:\/\/webcpporg\.github\.io\/">/,
-        /<meta name="robots" content="index, follow">/, /<html lang="en"/,
+        /<html lang="en"/,
         /<meta property="og:title"/, /<meta property="og:description"/, /<meta property="og:url"/,
         /<meta property="og:type"/, /<meta property="og:site_name" content="webcpp">/,
         /<meta property="og:image" content="https:\/\/[^"]+\.png">/, /<meta property="og:image:alt"/,
@@ -125,6 +125,17 @@ test('the head carries every SEO tag the spec names', () => {
     const graph = JSON.parse(html.match(/<script type="application\/ld\+json">([^<]*)<\/script>/)[1])['@graph']
     assert.deepEqual(graph.map(n => n['@type']).sort(), ['BreadcrumbList', 'Organization', 'WebPage', 'WebSite'])
     assert.equal((html.match(/<h1[ >]/g) || []).length, 1)
+})
+
+test('a preview page is not indexed: its one robots meta says noindex', () => {
+    const html = renderPage('pages/index.oui', page, context)
+    assert.deepEqual(html.match(/<meta name="robots" content="[^"]*">/g), ['<meta name="robots" content="noindex">'])
+})
+
+test('a release page is indexed and followed, never noindex', () => {
+    const html = renderPage('pages/index.oui', page, {...context, channel: 'release', version: '1.2.3'})
+    assert.deepEqual(html.match(/<meta name="robots" content="[^"]*">/g), ['<meta name="robots" content="index, follow">'])
+    assert.doesNotMatch(html, /noindex/)
 })
 
 test('a description outside 120 to 160 characters fails with its file', () => {

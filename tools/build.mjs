@@ -19,9 +19,11 @@
 //       libraries' light pages show (renderFragment's `docs-header`), and with --site-chrome the
 //       header of a page of the site's own style it does not render (`site-header`), each with
 //       its links from the site's root, which tools/ci/assemble.py rebases for each page it heads;
-//   build.mjs --index <site> --base <url> --catalogue <libraries.json> [--superproject <dir>]
-//       writes the files that index a site laid out whole, robots.txt, sitemap.xml, llms.txt and
-//       libraries.json (tools/indexing.mjs, which takes the same options, --index as --site).
+//   build.mjs --index <site> --base <url> --catalogue <libraries.json> --channel <preview|release>
+//             [--superproject <dir>]
+//       writes the files that index a site laid out whole, robots.txt, llms.txt, libraries.json
+//       and, on release, sitemap.xml (tools/indexing.mjs, which takes the same options, --index
+//       as --site).
 //
 // The steps may be given at once, and run in that order. A fault of a page prints
 // `<file>:<line>: <message>` and exits 1; a usage error exits 2.
@@ -166,8 +168,8 @@ async function render({pages, out, context: contextFile, chrome, 'site-chrome': 
 }
 
 /** tools/indexing.mjs over the site `site`, with the options --index was given. */
-function index({index, base, catalogue, superproject}) {
-    const options = ['--site', index, '--base', base, '--catalogue', catalogue]
+function index({index, base, catalogue, channel, superproject}) {
+    const options = ['--site', index, '--base', base, '--catalogue', catalogue, '--channel', channel]
     if (superproject) {
         options.push('--superproject', superproject)
     }
@@ -186,20 +188,21 @@ const {values} = parseArgs({
         index: {type: 'string'},
         base: {type: 'string'},
         catalogue: {type: 'string'},
+        channel: {type: 'string'},
         superproject: {type: 'string'},
     },
 })
 if (!values.bundle && !values.render && !values.index) {
     console.error('usage: build.mjs [--bundle] [--render --pages <dir> --out <dir> --context <file.json> [--chrome <file>] [--site-chrome <file>]]\n' +
-        '                 [--index <site> --base <url> --catalogue <libraries.json> [--superproject <dir>]]')
+        '                 [--index <site> --base <url> --catalogue <libraries.json> --channel <preview|release> [--superproject <dir>]]')
     process.exit(2)
 }
 if (values.render && !(values.pages && values.out && values.context)) {
     console.error('build.mjs: --render needs --pages, --out and --context')
     process.exit(2)
 }
-if (values.index && !(values.base && values.catalogue)) {
-    console.error('build.mjs: --index needs --base and --catalogue')
+if (values.index && !(values.base && values.catalogue && values.channel)) {
+    console.error('build.mjs: --index needs --base, --catalogue and --channel')
     process.exit(2)
 }
 if (values.bundle) {

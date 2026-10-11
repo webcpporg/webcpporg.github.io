@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict'
 import {execFileSync, spawnSync} from 'node:child_process'
-import {mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs'
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import test from 'node:test'
@@ -31,9 +31,10 @@ function fakeSite() {
     return out
 }
 
-function run(out, ...more) {
-    return spawnSync(process.execPath, [indexing, '--site', out, '--base', base, '--catalogue', catalogueFile, ...more],
-        {encoding: 'utf8'})
+/** indexing.mjs over `out` for `channel`, the release's unless named. */
+function run(out, {channel = 'release', more = []} = {}) {
+    return spawnSync(process.execPath, [indexing, '--site', out, '--base', base, '--catalogue', catalogueFile,
+        '--channel', channel, ...more], {encoding: 'utf8'})
 }
 
 /** The date of the last commit that changed `file` in the repository `directory`, or ''. */
@@ -41,11 +42,21 @@ function committed(directory, file) {
     return execFileSync('git', ['-C', directory, 'log', '-1', '--format=%cs', '--', file], {encoding: 'utf8'}).trim()
 }
 
-test('robots.txt allows every crawler, Google-Extended by name, and names the sitemap', () => {
+test("the release's robots.txt allows every crawler, Google-Extended by name, and names the sitemap", () => {
     const out = fakeSite()
     assert.equal(run(out).status, 0)
     assert.equal(readFileSync(join(out, 'robots.txt'), 'utf8'),
         `User-agent: *\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nSitemap: ${base}sitemap.xml\n`)
+    assert.ok(existsSync(join(out, 'sitemap.xml')))
+})
+
+test("the preview's robots.txt allows every crawler, so that each reads a page's noindex, and names no sitemap, which the preview does not write", () => {
+    const out = fakeSite()
+    const result = run(out, {channel: 'preview'})
+    assert.equal(result.status, 0, result.stderr)
+    assert.equal(readFileSync(join(out, 'robots.txt'), 'utf8'),
+        'User-agent: *\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n')
+    assert.ok(!existsSync(join(out, 'sitemap.xml')))
 })
 
 test('sitemap.xml lists every page under the base, sorted, each with the date its source last changed', () => {
@@ -74,35 +85,50 @@ test("with --superproject, a library's page has the date of its repository's las
     git('add', 'README.md')
     git('-c', 'commit.gpgsign=false', '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-q', '-m', 'trystero')
     const out = fakeSite()
-    assert.equal(run(out, '--superproject', superproject).status, 0)
+    assert.equal(run(out, {more: ['--superproject', superproject]}).status, 0)
     assert.ok(readFileSync(join(out, 'sitemap.xml'), 'utf8')
         .includes(`<url><loc>${base}libs/trystero/</loc><lastmod>2026-01-02</lastmod></url>`))
 })
 
-test('llms.txt says what webcpp is, then a line for every library and every other page', () => {
-    const out = fakeSite()
-    assert.equal(run(out).status, 0)
-    const llms = readFileSync(join(out, 'llms.txt'), 'utf8')
-    assert.match(llms, /^# webcpp\n\n> The home & its description\.\n/)
-    const lines = llms.split('\n')
-    for (const library of catalogue) {
-        assert.ok(lines.includes(`- [${library.name}](${base}libs/${library.key}/): ${library.description}`), library.key)
-    }
-    assert.ok(lines.includes(`- [C++ for the web - webcpp](${base}): The home & its description.`))
-    assert.ok(lines.includes(`- [C++ for WebAssembly - webcpp](${base}cpp/): The C++ door's description.`))
-    assert.equal(lines.filter(line => line.includes(`${base}libs/trystero/`)).length, 1, "a library's page is listed once")
-})
+for (const channel of ['preview', 'release']) {
+    test(`llms.txt says what webcpp is, then a line for every library and every other page, on ${channel}`, () => {
+        const out = fakeSite()
+        assert.equal(run(out, {channel}).status, 0)
+        const llms = readFileSync(join(out, 'llms.txt'), 'utf8')
+        assert.match(llms, /^# webcpp\n\n> The home & its description\.\n/)
+        const lines = llms.split('\n')
+        for (const library of catalogue) {
+            assert.ok(lines.includes(`- [${library.name}](${base}libs/${library.key}/): ${library.description}`), library.key)
+        }
+        assert.ok(lines.includes(`- [C++ for the web - webcpp](${base}): The home & its description.`))
+        assert.ok(lines.includes(`- [C++ for WebAssembly - webcpp](${base}cpp/): The C++ door's description.`))
+        assert.equal(lines.filter(line => line.includes(`${base}libs/trystero/`)).length, 1, "a library's page is listed once")
+    })
 
-test('the catalogue is copied to libraries.json as it is', () => {
-    const out = fakeSite()
-    assert.equal(run(out).status, 0)
-    assert.equal(readFileSync(join(out, 'libraries.json'), 'utf8'), readFileSync(catalogueFile, 'utf8'))
-})
+    test(`the catalogue is copied to libraries.json as it is, on ${channel}`, () => {
+        const out = fakeSite()
+        assert.equal(run(out, {channel}).status, 0)
+        assert.equal(readFileSync(join(out, 'libraries.json'), 'utf8'), readFileSync(catalogueFile, 'utf8'))
+    })
+}
 
 test('a base without its final slash fails, naming the option', () => {
     const out = fakeSite()
     const result = spawnSync(process.execPath, [indexing, '--site', out, '--base', 'https://webcpporg.github.io',
-        '--catalogue', catalogueFile], {encoding: 'utf8'})
+        '--catalogue', catalogueFile, '--channel', 'release'], {encoding: 'utf8'})
     assert.notEqual(result.status, 0)
     assert.match(result.stderr, /--base/)
+})
+
+test('a channel other than preview or release fails, naming the option and the two', () => {
+    for (const channel of [null, 'draft']) {
+        const out = fakeSite()
+        const result = spawnSync(process.execPath, [indexing, '--site', out, '--base', base, '--catalogue', catalogueFile,
+            ...(channel ? ['--channel', channel] : [])], {encoding: 'utf8'})
+        assert.equal(result.status, 2, channel)
+        assert.match(result.stderr, /--channel/)
+        assert.match(result.stderr, /preview/)
+        assert.match(result.stderr, /release/)
+        assert.ok(!existsSync(join(out, 'robots.txt')), 'nothing is written')
+    }
 })

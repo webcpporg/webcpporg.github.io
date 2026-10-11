@@ -6,20 +6,24 @@
 
 // The files that index the whole site, written once b2 site has laid it out:
 //
-//   indexing.mjs --site <out> --base <url> --catalogue <libraries.json> [--superproject <dir>]
+//   indexing.mjs --site <out> --base <url> --catalogue <libraries.json> --channel <preview|release>
+//                [--superproject <dir>]
 //
 // writes into <out>:
-//   robots.txt     every crawler allowed, Google-Extended by name, and the sitemap;
-//   sitemap.xml    every <out>/**/index.html as <base><path>, sorted, each with the date of the
-//                  last commit that changed its source;
+//   robots.txt     every crawler allowed, Google-Extended by name, and, on release, the sitemap;
+//   sitemap.xml    on release alone, every <out>/**/index.html as <base><path>, sorted, each with
+//                  the date of the last commit that changed its source;
 //   llms.txt       what webcpp is (the home's description), then a line for every library and
 //                  for every other page, with its title and description;
 //   libraries.json the catalogue, copied as it is.
 //
 // <base> is the channel's absolute URL, ending with "/": the one place the site's URLs are
-// absolute. A page's source is its .oui under this repository's pages/ for the site's own pages;
-// with --superproject, a library's repository (libs/<key>) for its page and doc/ for docs/. A
-// page with no known source, or whose source was never committed, has no <lastmod>.
+// absolute. The preview, the development version, is never indexed (every page carries noindex,
+// src/head.ts and tools/ci/assemble.py), so it has no sitemap, and its robots.txt still lets every
+// crawler in, since a crawler kept out of a page never reads its noindex. A page's source is its
+// .oui under this repository's pages/ for the site's own pages; with --superproject, a library's
+// repository (libs/<key>) for its page and doc/ for docs/. A page with no known source, or whose
+// source was never committed, has no <lastmod>.
 
 import {execFileSync} from 'node:child_process'
 import {copyFile, readdir, readFile, writeFile} from 'node:fs/promises'
@@ -96,16 +100,21 @@ const {values} = parseArgs({
         site: {type: 'string'},
         base: {type: 'string'},
         catalogue: {type: 'string'},
+        channel: {type: 'string'},
         superproject: {type: 'string'},
     },
 })
-if (!values.site || !values.base || !values.catalogue) {
-    fail('usage: indexing.mjs --site <out> --base <url> --catalogue <libraries.json> [--superproject <dir>]')
+if (!values.site || !values.base || !values.catalogue || !values.channel) {
+    fail('usage: indexing.mjs --site <out> --base <url> --catalogue <libraries.json> --channel <preview|release> [--superproject <dir>]')
+}
+if (!['preview', 'release'].includes(values.channel)) {
+    fail(`--channel ${values.channel} is no channel of the site: the channels are preview and release`)
 }
 if (!/^https?:\/\/[^/?#]+\/([^?#]*\/)?$/.test(values.base)) {
     fail(`--base ${values.base} is not an absolute http(s) URL ending with "/"`)
 }
 const {site: out, base} = values
+const release = values.channel === 'release'
 const catalogue = JSON.parse(await readFile(values.catalogue, 'utf8'))
 const pages = await Promise.all((await pagesUnder(out)).map(path => describe(out, path)))
 const home = pages.find(page => page.path === '')
@@ -115,20 +124,22 @@ if (!home?.description) {
 
 await writeFile(join(out, 'robots.txt'), [
     'User-agent: *', 'Allow: /', '',
-    'User-agent: Google-Extended', 'Allow: /', '',
-    `Sitemap: ${base}sitemap.xml`, '',
+    'User-agent: Google-Extended', 'Allow: /',
+    ...(release ? ['', `Sitemap: ${base}sitemap.xml`] : []), '',
 ].join('\n'))
 
-await writeFile(join(out, 'sitemap.xml'), [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...pages.map(({path}) => {
-        const date = lastmod(path, catalogue, values.superproject)
-        return `<url><loc>${xml(base + path)}</loc>${date ? `<lastmod>${date}</lastmod>` : ''}</url>`
-    }),
-    '</urlset>',
-    '',
-].join('\n'))
+if (release) {
+    await writeFile(join(out, 'sitemap.xml'), [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ...pages.map(({path}) => {
+            const date = lastmod(path, catalogue, values.superproject)
+            return `<url><loc>${xml(base + path)}</loc>${date ? `<lastmod>${date}</lastmod>` : ''}</url>`
+        }),
+        '</urlset>',
+        '',
+    ].join('\n'))
+}
 
 const libraryPages = new Set(catalogue.map(library => library.page))
 const line = (text, url, description) => `- [${label(text)}](${url})${description ? `: ${description}` : ''}`

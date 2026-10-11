@@ -87,8 +87,8 @@ b2 alone, at the superproject's root:
 
 | Command | What it does |
 | --- | --- |
-| `b2 site` | builds the whole site into `bin/site/`: this repository's pages, every library's page and the report, every link checked |
-| `b2 site -sWEBCPP_SITE=release -sWEBCPP_SITE_VERSION=<version>` | the same, for the release channel |
+| `b2 site` | builds the whole site into `bin/site/`: this repository's pages, every library's page and the report, every link checked; the preview channel, the development version served at https://webcpporg.github.io/, whose every page carries `noindex` and which writes no sitemap |
+| `b2 site -sWEBCPP_SITE=release -sWEBCPP_SITE_VERSION=<version>` | the same, for the release channel, served at https://webcpp.org/: indexed, with its sitemap |
 | `b2 site-serve` | builds the site and serves it at http://127.0.0.1:8765/ |
 | `b2 /webcpp/site//test` | the site's own tests |
 
@@ -112,6 +112,6 @@ Python for the report: one more tool on `PATH`, at version 26.7.0.
 | `assets/` | the styles, the logo and `card.svg`, the social cards' template, copied to the site's `assets/` |
 | `seo/queries.json` | the searches the site answers, each with the page that answers it, which a test checks |
 | `tools/build.mjs` | the `build` script: the bundles, the pages rendered to HTML with their social cards (`tools/cards.mjs`), the header of the libraries' pages, and the indexing files (`--index`) |
-| `tools/indexing.mjs` | `robots.txt`, `sitemap.xml`, `llms.txt` and `libraries.json`, written once `b2 site` has laid the whole site out |
+| `tools/indexing.mjs` | `robots.txt`, `llms.txt`, `libraries.json` and, on the release channel, `sitemap.xml`, written once `b2 site` has laid the whole site out |
 | `tools/serve.mjs`, `tools/dev.mjs` | the `serve` and `dev` scripts |
 | `test/` | the site's checks, and `fixtures/catalogue.json`, the catalogue they and `npm run dev` render the pages with |

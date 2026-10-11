@@ -59,20 +59,28 @@ test("the client bundle carries the mark's drawing alone, never logo.svg's comme
     assert.ok(!bundle.includes("webcpp's mark, as the owner chose it"), 'logo.svg\'s comment is not')
 })
 
-test('--index writes robots.txt, sitemap.xml, llms.txt and libraries.json into a laid-out site', () => {
-    const work = mkdtempSync(join(tmpdir(), 'webcpp-build-'))
-    const out = join(work, 'site')
-    mkdirSync(out)
-    writeFileSync(join(out, 'index.html'), '<title>webcpp</title>\n<meta name="description" content="C++ for the web.">\n')
-    execFileSync(process.execPath, [build, '--index', out, '--base', base, '--catalogue',
-        join(site, 'test/fixtures/catalogue.json')], {stdio: 'inherit'})
-    for (const file of ['robots.txt', 'sitemap.xml', 'llms.txt', 'libraries.json']) {
-        assert.ok(existsSync(join(out, file)), file)
-    }
-    assert.match(readFileSync(join(out, 'sitemap.xml'), 'utf8'), /<loc>https:\/\/webcpporg\.github\.io\/<\/loc>/)
-})
+for (const [channel, files, absent] of [
+    ['release', ['robots.txt', 'sitemap.xml', 'llms.txt', 'libraries.json'], []],
+    ['preview', ['robots.txt', 'llms.txt', 'libraries.json'], ['sitemap.xml']],
+]) {
+    test(`--index --channel ${channel} writes ${files.join(', ')} into a laid-out site${absent.length ? `, and no ${absent.join(', ')}` : ''}`, () => {
+        const work = mkdtempSync(join(tmpdir(), 'webcpp-build-'))
+        const out = join(work, 'site')
+        mkdirSync(out)
+        writeFileSync(join(out, 'index.html'), '<title>webcpp</title>\n<meta name="description" content="C++ for the web.">\n')
+        execFileSync(process.execPath, [build, '--index', out, '--base', base, '--catalogue',
+            join(site, 'test/fixtures/catalogue.json'), '--channel', channel], {stdio: 'inherit'})
+        for (const file of files) {
+            assert.ok(existsSync(join(out, file)), file)
+        }
+        for (const file of absent) {
+            assert.ok(!existsSync(join(out, file)), file)
+        }
+        assert.match(readFileSync(join(out, 'llms.txt'), 'utf8'), /\(https:\/\/webcpporg\.github\.io\/\)/)
+    })
+}
 
-test('--index without --base or --catalogue is a usage error', () => {
+test('--index without --base, --catalogue or --channel is a usage error', () => {
     assert.throws(() => execFileSync(process.execPath, [build, '--index', tmpdir()], {stdio: 'pipe'}),
-        error => error.status === 2 && /--index needs --base and --catalogue/.test(error.stderr.toString()))
+        error => error.status === 2 && /--index needs --base, --catalogue and --channel/.test(error.stderr.toString()))
 })

@@ -26,6 +26,12 @@ test('every page has a title and a description', () => {
     }
 })
 
+test('every page of a preview build carries noindex, the preview being the development version alone', () => {
+    for (const {path} of pages) {
+        assert.ok(pageAt(out, path).includes('<meta name="robots" content="noindex">'), path || 'the home')
+    }
+})
+
 test("every page's header links to the libraries and the three doors, relative to the page", () => {
     for (const {path} of pages) {
         const header = pageAt(out, path).match(/<header class="site">[\s\S]*?<\/header>/)[0]
