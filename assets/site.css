@@ -8,23 +8,13 @@
 
 /*
  * The site's provisional theme, until the owner chooses the design (Task 8): written for a
- * 360 px screen first, then widened at 768, 1280 and 1440 px; light and dark; one accent.
+ * 360 px screen first, then widened at 768, 1280 and 1440 px; light and dark; one accent. Its
+ * tokens, light, and the header and the band are chrome.css's, which every page links first:
+ * the libraries' pages and the docs index, whose own style is Asciidoctor's, link it alone.
  */
 
 :root {
     color-scheme: light dark;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    --background: #ffffff;
-    --surface: #f5f5f7;
-    --text: #1d1d1f;
-    --muted: #6e6e73;
-    --rule: #d2d2d7;
-    --accent: #0066cc;
-    /* The accent as a fill under white text, the same in both themes: 4.6 to 1. */
-    --accent-fill: #0071e3;
-    --gutter: 16px;
-    --measure: 1120px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -84,54 +74,6 @@ noscript {
     background: var(--surface);
     color: var(--muted);
     font-size: 14px;
-}
-
-/* The header: the logo, then the navigation, which wraps under it on a phone. */
-
-header.site {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 24px;
-    max-width: var(--measure);
-    margin: 0 auto;
-    padding: 12px var(--gutter);
-}
-
-header.site .logo {
-    display: block;
-    line-height: 0;
-}
-
-header.site img {
-    display: block;
-    height: 28px;
-    width: auto;
-}
-
-header.site nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 16px;
-    font-size: 15px;
-}
-
-header.site nav a {
-    color: var(--text);
-}
-
-header.site nav a[aria-current="page"] {
-    color: var(--accent);
-}
-
-.band {
-    margin: 0;
-    padding: 6px var(--gutter);
-    border-block: 1px solid var(--rule);
-    background: var(--surface);
-    color: var(--muted);
-    font-size: 13px;
-    text-align: center;
 }
 
 /* The page. */
@@ -412,15 +354,6 @@ footer.site p {
 }
 
 @media (min-width: 768px) {
-    :root {
-        --gutter: 32px;
-    }
-
-    header.site {
-        flex-wrap: nowrap;
-        justify-content: space-between;
-    }
-
     main {
         padding-top: 48px;
     }
@@ -475,10 +408,6 @@ footer.site p {
 }
 
 @media (min-width: 1280px) {
-    :root {
-        --gutter: 48px;
-    }
-
     .hero {
         padding: 48px 0 64px;
     }
@@ -493,10 +422,6 @@ footer.site p {
 }
 
 @media (min-width: 1440px) {
-    :root {
-        --measure: 1280px;
-    }
-
     body {
         font-size: 18px;
     }

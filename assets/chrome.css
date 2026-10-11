@@ -1,0 +1,168 @@
+/*
+ * Copyright (c) 2026 WebCpp.org
+ *
+ * Distributed under the Boost Software License, Version 1.0. (See
+ * accompanying file LICENSE_1_0.txt or copy at
+ * https://www.boost.org/LICENSE_1_0.txt)
+ */
+
+/*
+ * The site's chrome: the header and the band every page shows, the libraries' pages and the docs
+ * index among them, which b2 site heads with it and whose own style is Asciidoctor's. It holds the
+ * theme's tokens, light, which site.css turns dark on the site's own pages, and rules that reach
+ * nothing but the header and the band, so that a page of the docs keeps its look and its light
+ * theme, and its header with it.
+ */
+
+:root {
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --background: #ffffff;
+    --surface: #f5f5f7;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --rule: #d2d2d7;
+    --accent: #0066cc;
+    /* The accent as a fill under white text, the same in both themes: 4.6 to 1. */
+    --accent-fill: #0071e3;
+    --gutter: 16px;
+    --measure: 1120px;
+}
+
+header.site,
+header.site *,
+.band,
+.band * {
+    box-sizing: border-box;
+}
+
+/* The header: the logo, then the navigation, which wraps under it on a phone. */
+
+header.site {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 24px;
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 12px var(--gutter);
+    font: 17px/1.5 var(--font);
+}
+
+header.site .logo {
+    display: block;
+    line-height: 0;
+}
+
+header.site img {
+    display: block;
+    height: 28px;
+    width: auto;
+}
+
+header.site nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 15px;
+}
+
+header.site nav a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+header.site nav a:hover {
+    text-decoration: underline;
+}
+
+header.site a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+header.site nav a[aria-current="page"] {
+    color: var(--accent);
+}
+
+.band {
+    margin: 0;
+    padding: 6px var(--gutter);
+    border-block: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--muted);
+    font: 13px/1.5 var(--font);
+    text-align: center;
+}
+
+.band code {
+    padding: 0;
+    background: none;
+    color: inherit;
+    font-family: var(--mono);
+    font-size: 0.88em;
+}
+
+/*
+ * On a library's page and the docs index, Asciidoctor's article, the header's content lines up
+ * with the page's, which tools/doc/docinfo.html centres in 66em of the page's 16px between
+ * Asciidoctor's margins, and keeps the page's light theme: the logo, an image, follows the
+ * color-scheme of its element, and would otherwise draw its dark theme's white on the page's
+ * white.
+ */
+body.article > header.site {
+    max-width: 66rem;
+    padding-inline: 0.9375rem;
+    color-scheme: light;
+}
+
+@media (min-width: 768px) {
+    :root {
+        --gutter: 32px;
+    }
+
+    header.site {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+    }
+}
+
+/*
+ * Beside the table of contents a page of the docs keeps at its left, its column is too narrow for
+ * the navigation on the logo's line until 1280px: the header stays as on a phone.
+ */
+@media (min-width: 768px) and (max-width: 1279px) {
+    body.toc2 > header.site {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+}
+
+/*
+ * There the band still reaches the window's right edge, through the padding docinfo.html gives the
+ * body at its right: 1rem from 768px, 2rem from 1280px.
+ */
+@media (min-width: 768px) {
+    body.toc2.toc-left > .band {
+        margin-right: -1rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    body.toc2.toc-left > .band {
+        margin-right: -2rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    :root {
+        --gutter: 48px;
+    }
+}
+
+@media (min-width: 1440px) {
+    :root {
+        --measure: 1280px;
+    }
+}

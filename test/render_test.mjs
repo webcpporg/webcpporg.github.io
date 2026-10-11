@@ -34,6 +34,8 @@ test('a page is a shell that carries its OpenUI Lang and the tree OpenUI rendere
     assert.match(html, />pratt<\/a>/)
     assert.match(html, /webcpp's own/)
     assert.match(html, /<script type="module" src="assets\/site\.js"><\/script>/)
+    // The chrome's tokens first, which site.css turns dark.
+    assert.match(html, /<link rel="stylesheet" href="assets\/chrome\.css">\n<link rel="stylesheet" href="assets\/site\.css">/)
     assert.match(html, /<noscript>[^<]*needs JavaScript[^<]*<\/noscript>/)
 })
 

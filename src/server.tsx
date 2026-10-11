@@ -37,6 +37,7 @@ export function renderPage(file: string, source: string, context: SiteContext): 
         '<meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
         writeHead(head),
+        `<link rel="stylesheet" href="${attribute(context.root)}assets/chrome.css">`,
         `<link rel="stylesheet" href="${attribute(context.root)}assets/site.css">`,
         `<script type="module" src="${attribute(context.root)}assets/site.js"></script>`,
         '</head>',
