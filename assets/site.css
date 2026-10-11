@@ -117,7 +117,8 @@ main > section {
     border-top: 1px solid var(--rule);
 }
 
-main > section > p {
+/* On the opening page, the one a Hero opens, a section's text is its lede, quieter than its heading. */
+main:has(> .hero) > section > p {
     color: var(--muted);
 }
 

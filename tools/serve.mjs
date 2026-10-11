@@ -14,13 +14,20 @@
 // mean. Each file is served with its type, wasm, the web manifest and modules among them, and
 // without caching, so that a reload shows the last build. A directory is its index.html, reached
 // with its final slash, which the site's relative links need: a path to one without it is
-// redirected there. Nothing outside the directory is served. dev.mjs serves through a link it
-// swaps onto a fresh build (pointTo): a root that has been there and goes briefly missing (the
-// swap's own gap, real only on Windows, which cannot rename a link onto one already there) is
-// waited for, bounded, then answered 503, never the 404 a root that simply never held the path
-// gets at once; a file that goes missing once its root is there is retried the same way, then
-// answered 503 too. Neither case, nor a fault of the stream itself, ever ends the process on it.
+// redirected there. Nothing outside the directory is served. A request-target is read as a path:
+// its leading slashes collapse, by a redirect to the one path, an absolute-form target is served by
+// its path (RFC 9112), and any other is answered 400, so that no target is read as another host or
+// reaches a fault of the server's own.
+//
+// b2 site and dev.mjs each serve through a link they swap onto a fresh build with one rename
+// (tools/swap.mjs, pointTo), so a request reads one build or the other, whole: a root that has
+// been there and goes briefly missing (the swap's own gap, real only on Windows, which cannot
+// rename a link onto one already there) is waited for, bounded, then answered 503, never the 404
+// a root that simply never held the path gets at once; a file that goes missing once its root is
+// there is retried the same way, then answered 503 too. Neither case, nor a fault of the stream
+// itself, ever ends the process on it.
 
+import {realpathSync} from 'node:fs'
 import {open, stat} from 'node:fs/promises'
 import {createServer} from 'node:http'
 import {extname, join, resolve, sep} from 'node:path'
@@ -47,8 +54,8 @@ const types = {
     '.woff2': 'font/woff2',
 }
 
-// dev.mjs swaps the link it serves through onto a fresh build (tools/dev.mjs, pointTo()): on
-// Windows alone, which cannot rename a link onto one already there, the old link is removed
+// b2 site and dev.mjs swap the link served through onto a fresh build (tools/swap.mjs, pointTo()):
+// on Windows alone, which cannot rename a link onto one already there, the old link is removed
 // first, a real gap. Five retries, 20ms apart, cover it without a reader noticing; a file within
 // an otherwise-present root is retried the same way, for the narrower case of one file gone on
 // its own; past either, the request is answered 503, to try again, never left to a 404 that would
@@ -143,6 +150,27 @@ async function respond(found, path, url, request, response) {
     stream.pipe(response)
 }
 
+/**
+ * The URL a request-target names, its path and its query, or null for a target that names none:
+ * origin-form (`/docs/`) read against this server's own origin, never as a reference (`//docs/`
+ * is a path, not the host `docs`), and absolute-form (`http://host/docs/`) read for its path and
+ * query alone, the host this server's whatever it says.
+ */
+function target(raw) {
+    try {
+        if (raw.startsWith('/')) {
+            return new URL(`http://${host}${raw}`)
+        }
+        if (/^https?:\/\//i.test(raw)) {
+            const url = new URL(raw)
+            return new URL(`http://${host}${url.pathname}${url.search}`)
+        }
+    } catch {
+        // A target no URL parses names nothing to serve.
+    }
+    return null
+}
+
 /** The answer to one request, from the first of `roots` that holds its path: `everSeen`, shared
  * across requests, remembers which roots have been there, so a root that simply never held
  * anything (serve({roots: [out, cache]})'s cache, before an example has wasm) is never waited for,
@@ -152,7 +180,15 @@ async function answer(roots, everSeen, request, response) {
         response.writeHead(405, {allow: 'GET, HEAD'}).end()
         return
     }
-    const url = new URL(request.url, `http://${host}`)
+    const url = target(request.url)
+    if (url === null) {
+        response.writeHead(400, {'content-type': types['.txt']}).end(`Not a path: ${request.url}\n`)
+        return
+    }
+    if (url.pathname.startsWith('//')) {
+        response.writeHead(301, {location: `${url.pathname.replace(/^\/+/, '/')}${url.search}`}).end()
+        return
+    }
     let path = null
     try {
         path = decodeURIComponent(url.pathname)
@@ -201,7 +237,9 @@ export function serve({roots, port = defaultPort}) {
     })
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// node resolves this module's own path through links, and argv[1] keeps them: compared as real
+// paths, a script started through a path that holds a link (a checkout under /var on macOS) runs.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
     const [directory, port = String(defaultPort)] = process.argv.slice(2)
     if (!directory || !/^\d+$/.test(port)) {
         console.error('usage: serve.mjs <dir> [port]')

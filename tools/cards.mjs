@@ -16,7 +16,7 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises'
 import {dirname, join, resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {Resvg} from '@resvg/resvg-js'
-import {drawing} from './icons.mjs'
+import {drawing} from './drawing.mjs'
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 

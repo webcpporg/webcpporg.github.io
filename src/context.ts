@@ -50,6 +50,8 @@ export type GraphNode = {'@type': string} & Record<string, unknown>
 export type Shared = {
     site: SiteContext
     addToGraph: (node: GraphNode) => void
+    /** True in the header of the libraries' pages, which are light alone, whatever the reader's theme. */
+    light?: boolean
 }
 
 export const SharedContext = createContext<Shared | null>(null)

@@ -73,6 +73,48 @@ test('a directory without its slash is redirected to it, and nothing outside the
     }
 })
 
+test('a request-target is read as a path: its leading slashes collapse, by a redirect to the one path', async t => {
+    // `GET //` once answered 500 (`new URL('//', base)` reads a scheme-relative URL with no host)
+    // and `GET //docs/` the home (`docs` read as a host). A redirect, never a Location of `//...`,
+    // which a browser would follow to another host.
+    const server = await serve({roots: [root], port: 0})
+    t.after(() => server.close())
+    const {port} = server.address()
+    const redirects = {'//': '/', '//docs/': '/docs/', '//docs/?x=1': '/docs/?x=1', '///docs': '/docs'}
+    for (const [path, location] of Object.entries(redirects)) {
+        const answer = await get(port, path)
+        assert.equal(answer.status, 301, `${path}: ${answer.status} ${answer.body}`)
+        assert.equal(answer.headers.location, location, path)
+    }
+})
+
+test('an escaped slash never climbs out of the site, and no request-target is answered 500', async t => {
+    const server = await serve({roots: [root], port: 0})
+    t.after(() => server.close())
+    const {port} = server.address()
+    for (const path of ['/..%2f', '/..%2fsecret.txt', '/docs/..%2f..%2fsecret.txt', '/%2f%2e%2e%2fsecret.txt']) {
+        const answer = await get(port, path)
+        assert.equal(answer.status, 404, `${path}: ${answer.body}`)
+        assert.doesNotMatch(answer.body, /outside the site/, path)
+    }
+    for (const path of ['*', 'docs/', 'mailto:someone', 'http://[bad']) {
+        const answer = await get(port, path)
+        assert.equal(answer.status, 400, `${path}: ${answer.status} ${answer.body}`)
+    }
+})
+
+test('an absolute-form request-target is served by its path, as RFC 9112 asks of a server', async t => {
+    const server = await serve({roots: [root], port: 0})
+    t.after(() => server.close())
+    const {port} = server.address()
+    const answer = await get(port, `http://127.0.0.1:${port}/docs/`)
+    assert.equal(answer.status, 200, answer.body)
+    assert.match(answer.body, /<title>docs<\/title>/)
+    const redirect = await get(port, `http://127.0.0.1:${port}/docs?x=1`)
+    assert.equal(redirect.status, 301)
+    assert.equal(redirect.headers.location, '/docs/?x=1')
+})
+
 test('a file briefly missing on its own is retried and opens once it is back', async () => {
     const file = join(work, 'swap.txt')
     writeFileSync(file, 'first')

@@ -7,7 +7,9 @@
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import test from 'node:test'
-import {renderFragment, renderPage, PageError} from '../build/server.mjs'
+import {createElement, Fragment} from 'react'
+import {renderToString} from 'react-dom/server'
+import {Mark, renderFragment, renderPage, PageError} from '../build/server.mjs'
 
 const context = {
     channel: 'preview', commit: '0123456789abcdef0123456789abcdef01234567', date: '2026-10-10',
@@ -39,12 +41,17 @@ test('a page is a shell that carries its OpenUI Lang and the tree OpenUI rendere
     assert.match(html, /<noscript>[^<]*needs JavaScript[^<]*<\/noscript>/)
 })
 
-test("the header, the band and the footer are OpenUI's, inside #root, and the docs header is the same", () => {
+test("the header, the band and the footer are OpenUI's, inside #root, and the docs header is the same but for its light mark", () => {
     const html = renderPage('pages/index.oui', page, context)
     const root = html.slice(html.indexOf('<div id="root">'), html.indexOf('<script type="text/openui"'))
     assert.match(root, /<header class="site">[\s\S]*<p class="band">[\s\S]*<main>[\s\S]*<\/main><footer class="site">/)
     assert.equal(html.split('<header class="site">').length, 2)
-    assert.ok(root.includes(renderFragment('docs-header', context)))
+    const docs = renderFragment('docs-header', context)
+    // The libraries' pages are light alone, so their header draws the mark in light colours alone,
+    // never through the theme's media query, which an image follows as its browser decides.
+    assert.ok(docs.includes('<img src="assets/logo-light.svg"'), docs)
+    assert.ok(root.includes('<img src="assets/logo.svg"'))
+    assert.ok(root.includes(docs.replace('assets/logo-light.svg', 'assets/logo.svg')))
 })
 
 test('the head links the favicon, its fallback and the Apple touch icon, from the site\'s root', () => {
@@ -70,6 +77,21 @@ test("the hero draws the mark inline, its clip paths' ids its own, and every ref
         assert.match(mark, new RegExp(`class="[^"]*\\b${part}\\b`), part)
     }
     assert.doesNotMatch(mark, /<style|<title/)
+})
+
+test('two marks rendered together each clip with ids of their own, and every reference resolves within its copy', () => {
+    const html = renderToString(createElement(Fragment, null,
+        createElement(Mark, {className: 'mark'}), createElement(Mark, {className: 'mark'})))
+    const marks = [...html.matchAll(/<svg class="mark"[^>]*>[\s\S]*?<\/svg>/g)].map(found => found[0])
+    assert.equal(marks.length, 2)
+    const ids = marks.map(mark => [...mark.matchAll(/ id="([^"]+)"/g)].map(found => found[1]))
+    for (const [i, mark] of marks.entries()) {
+        assert.ok(ids[i].length >= 2)
+        for (const [, reference] of mark.matchAll(/url\(#([^)]+)\)/g)) {
+            assert.ok(ids[i].includes(reference), `mark ${i}: url(#${reference}) resolves within it`)
+        }
+    }
+    assert.deepEqual(ids[0].filter(id => ids[1].includes(id)), [], 'no id of one copy is the other\'s')
 })
 
 test('the page source in the shell cannot close its script element', () => {

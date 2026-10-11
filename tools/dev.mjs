@@ -23,11 +23,14 @@
 
 import {execFileSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
-import {existsSync, watch} from 'node:fs'
-import {cp, mkdir, readdir, readFile, readlink, rename, rm, symlink, writeFile} from 'node:fs/promises'
-import {basename, dirname, join, relative, resolve, sep} from 'node:path'
+import {existsSync, realpathSync, watch} from 'node:fs'
+import {cp, mkdir, readdir, readFile, rm, writeFile} from 'node:fs/promises'
+import {dirname, join, relative, resolve, sep} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {defaultPort, host, serve} from './serve.mjs'
+import {pointTo} from './swap.mjs'
+
+export {pointTo}
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -107,56 +110,6 @@ export async function exampleWasm({local, cache, base = preview, fetch = globalT
     return {from: base, files}
 }
 
-/**
- * Makes `link` point to `target` (an absolute path), replacing what it pointed to before, with
- * one rename of a link of its own, never of `link` itself until that rename: a symbolic link
- * (`dir`) or, where Windows refuses one, a junction, as tools/node/install.py's made_link does.
- * POSIX renames a link onto another atomically, so link is never briefly gone; Windows renames no
- * link onto one that is already there, so it is removed first, a real (if short) gap, which
- * serve.mjs's own retry is for. Returns the previous target, absolute, or null for none.
- *
- * Tip: a `${link}.next-<pid>` left by a run that crashed between creating it and the final rename
- * is cleaned up first, so it never piles up across runs; and when `link` itself exists but is not
- * a symlink, it is an earlier layout's build output (dev.mjs once built straight into it), never a
- * target this function swapped in, so it is disposable and removed outright rather than renamed
- * onto, which rename(2) refuses with EISDIR for a non-empty directory.
- */
-export async function pointTo(link, target) {
-    const dir = dirname(link)
-    const prefix = `${basename(link)}.next-`
-    for (const entry of await readdir(dir).catch(() => [])) {
-        if (entry.startsWith(prefix)) {
-            await rm(join(dir, entry), {recursive: true, force: true})
-        }
-    }
-    const previous = await readlink(link).catch(() => null)
-    if (previous === null && existsSync(link)) {
-        await rm(link, {recursive: true, force: true})
-    }
-    const next = `${link}.next-${process.pid}`
-    let linked = false
-    try {
-        try {
-            await symlink(target, next, 'dir')
-        } catch (error) {
-            if (process.platform !== 'win32') {
-                throw error
-            }
-            await symlink(target, next, 'junction')
-        }
-        if (process.platform === 'win32' && existsSync(link)) {
-            await rm(link, {recursive: true, force: true})
-        }
-        await rename(next, link)
-        linked = true
-    } finally {
-        if (!linked) {
-            await rm(next, {recursive: true, force: true})
-        }
-    }
-    return previous
-}
-
 let builds = 0
 
 /**
@@ -233,6 +186,8 @@ async function main() {
     }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// node resolves this module's own path through links, and argv[1] keeps them: compared as real
+// paths, a script started through a path that holds a link (a checkout under /var on macOS) runs.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
     await main()
 }

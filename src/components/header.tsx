@@ -31,12 +31,15 @@ export const Header = defineComponent({
     description: 'The site\'s header: the logo and the navigation. A Page places it; a page never names it.',
     props: z.object({}),
     component: function SiteHeader() {
-        const {site} = useShared()
+        const {site, light} = useShared()
+        // The light mark on a page that is light alone: an image follows its element's colour scheme
+        // as its browser decides, which only a mark of one theme leaves nothing to.
+        const logo = light ? 'logo-light.svg' : 'logo.svg'
         return (
             <header className="site">
                 <a className="logo" href={site.root || './'}>
                     {/* In a picture, so that React writes no preload link before the header for it. */}
-                    <picture><img src={`${site.root}assets/logo.svg`} alt="" width="28" height="28" /></picture>
+                    <picture><img src={`${site.root}assets/${logo}`} alt="" width="28" height="28" /></picture>
                     <span>webcpp</span>
                 </a>
                 <details className="menu">

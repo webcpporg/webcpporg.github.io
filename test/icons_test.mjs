@@ -10,6 +10,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {join} from 'node:path'
 import test from 'node:test'
+import {drawing} from '../tools/drawing.mjs'
 import * as icons from '../tools/icons.mjs'
 import {site} from './site.mjs'
 
@@ -21,14 +22,34 @@ function size(png) {
     return [png.readUInt32BE(16), png.readUInt32BE(20)]
 }
 
-test('every app icon is a square PNG of its size, on each ground, and the Apple touch icon is 180 px', async () => {
+test('the build writes the app icons on the accent, the Apple touch icon, the favicon and the light mark, and nothing else', async () => {
     const files = new Map((await icons.icons()).map(({file, data}) => [file, data]))
-    for (const ground of Object.keys(icons.grounds)) {
-        for (const side of icons.appSizes) {
-            assert.deepEqual(size(files.get(`assets/icons/icon-${ground}-${side}.png`)), [side, side], `${ground} ${side}`)
-        }
+    assert.deepEqual([...files.keys()].sort(), [
+        'assets/icons/apple-touch-icon.png',
+        ...icons.appSizes.map(side => `assets/icons/icon-accent-${side}.png`),
+        'assets/logo-light.svg',
+        'favicon.ico',
+    ].sort())
+    for (const side of icons.appSizes) {
+        assert.deepEqual(size(files.get(`assets/icons/icon-accent-${side}.png`)), [side, side], side)
     }
     assert.deepEqual(size(files.get('assets/icons/apple-touch-icon.png')), [180, 180])
+})
+
+test("the light mark is the logo's drawing with the light theme's colours alone, for the libraries' light pages", async () => {
+    const light = (await icons.icons()).find(({file}) => file === 'assets/logo-light.svg').data.toString()
+    assert.doesNotMatch(light, /@media|prefers-color-scheme/)
+    assert.ok(light.includes(drawing(logo)), 'the same drawing')
+    assert.match(light, /\.ink \{ stroke: #1d1d1f; \}/)
+    assert.match(light, /\.acc \{ stroke: #5b3fd9; \}/)
+    assert.match(light, /<title[^>]*>webcpp<\/title>/)
+})
+
+test('drawing() is the root\'s content without its title, style and comments, and refuses an SVG without a root', () => {
+    const inner = drawing(logo)
+    assert.match(inner, /^<defs>/)
+    assert.doesNotMatch(inner, /<title|<style|<!--/)
+    assert.throws(() => drawing('<g/>'), /no <svg> root/)
 })
 
 test('favicon.ico holds a PNG for each of its sizes, each where its directory entry says', async () => {
@@ -42,7 +63,7 @@ test('favicon.ico holds a PNG for each of its sizes, each where its directory en
     })
 })
 
-test("resvg honours the mark's clip paths: each part keeps its colour on either side of a joint's seam", () => {
+test("resvg draws each part in its colour on either side of a joint's seam", () => {
     const side = 512
     const {pixels} = icons.render(icons.iconSvg(logo, 'accent', 0.625), side)
     // The colour at the mark's point (x, y), the app icon drawing the mark at 0.625 of its side.
@@ -59,6 +80,22 @@ test("resvg honours the mark's clip paths: each part keeps its colour on either 
     // Either side of the top left joint's seam, which runs through (19, 20) towards (0, 12.13).
     assert.equal(at(19, 18.5), ink, 'the arm, just above its seam')
     assert.equal(at(17.3, 22.4), accent, 'the angle bracket, just below the seam')
+})
+
+test("resvg honours both of the mark's clip paths: without either, it draws another picture", () => {
+    const side = 512
+    const pixels = svg => icons.render(svg, side).pixels
+    const real = pixels(icons.iconSvg(logo, 'accent', 0.625))
+    for (const clip of ['arms', 'angles']) {
+        const unclipped = logo.replace(` clip-path="url(#${clip})"`, '')
+        assert.notEqual(unclipped, logo, clip)
+        const other = pixels(icons.iconSvg(unclipped, 'accent', 0.625))
+        let differ = 0
+        for (let i = 0; i < real.length; i++) {
+            differ += real[i] !== other[i] ? 1 : 0
+        }
+        assert.ok(differ > 0, `the ${clip} clip changes nothing resvg draws`)
+    }
 })
 
 test('on the accent, the angle brackets are black, 3 to 1 at least against the ground', () => {

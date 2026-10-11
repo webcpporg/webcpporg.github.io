@@ -134,6 +134,8 @@ rule valid-html ( targets * : sources * : properties * )
     PAGES on $(targets) = [ path.native $(.root)/bin/site ] ;
 }
 
+# find -H, which follows bin/site, a link b2 site swaps onto each build (tools/swap.mjs), where a
+# plain find would stop at the link and find no page, so that the check would pass on nothing;
 # find, never a glob of b2's or the shell's, so a page's path that holds a space is one argument;
 # -print0 piped to xargs -0, never -exec ... +, since find's own exit status says nothing of
 # html-validate's: with -exec, a page that fails validation would still leave find, and so this
@@ -143,16 +145,16 @@ rule valid-html ( targets * : sources * : properties * )
 actions valid-html
 {
     set -e
-    site=`find "$(PAGES)" -name '*.html' ! \( -path "$(PAGES)/docs/*" -o -path "$(PAGES)/libs/*" \)`
+    site=`find -H "$(PAGES)" -name '*.html' ! \( -path "$(PAGES)/docs/*" -o -path "$(PAGES)/libs/*" \)`
     if [ -n "$site" ]
     then
-        find "$(PAGES)" -name '*.html' ! \( -path "$(PAGES)/docs/*" -o -path "$(PAGES)/libs/*" \) -print0 \
+        find -H "$(PAGES)" -name '*.html' ! \( -path "$(PAGES)/docs/*" -o -path "$(PAGES)/libs/*" \) -print0 \
             | xargs -0 "$(HTML_VALIDATE)" --config "$(CONFIG)"
     fi
-    docs=`find "$(PAGES)" -name '*.html' \( -path "$(PAGES)/docs/*" -o -path "$(PAGES)/libs/*" \)`
+    docs=`find -H "$(PAGES)" -name '*.html' \( -path "$(PAGES)/docs/*" -o -path "$(PAGES)/libs/*" \)`
     if [ -n "$docs" ]
     then
-        find "$(PAGES)" -name '*.html' \( -path "$(PAGES)/docs/*" -o -path "$(PAGES)/libs/*" \) -print0 \
+        find -H "$(PAGES)" -name '*.html' \( -path "$(PAGES)/docs/*" -o -path "$(PAGES)/libs/*" \) -print0 \
             | xargs -0 "$(HTML_VALIDATE)" --config "$(DOCS_CONFIG)"
     fi
 }

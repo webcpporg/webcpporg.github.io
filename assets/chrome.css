@@ -136,15 +136,15 @@ header.site nav a + a {
 }
 
 header.site nav a:hover,
+header.site nav a[aria-current="page"] {
+    color: var(--accent);
+}
+
 header.site a:focus-visible,
 header.site summary:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     border-radius: 4px;
-}
-
-header.site nav a[aria-current="page"] {
-    color: var(--accent);
 }
 
 .band {

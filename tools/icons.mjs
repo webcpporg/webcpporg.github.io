@@ -7,13 +7,16 @@
 // The site's icons and its favicon, which the build's --render step writes, every one rendered
 // from assets/logo.svg by @resvg/resvg-js, so that no image is drawn twice:
 //
-//   assets/icons/icon-<ground>-<size>.png   the app icons, 192 and 512 px, on each ground;
+//   assets/icons/icon-accent-<size>.png     the app icons, 192 and 512 px, on the accent;
 //   assets/icons/apple-touch-icon.png       180 px, on the accent;
-//   favicon.ico                             16, 32 and 48 px, on the accent, at the site's root.
+//   favicon.ico                             16, 32 and 48 px, on the accent, at the site's root;
+//   assets/logo-light.svg                   the mark in the light theme's colours alone, which the
+//                                           header of the libraries' light pages shows.
 //
-// resvg reads no media query, so each theme is a file of its own: the mark's colours are set
-// here for each ground. The app icons are square and full-bleed, the mark inside the safe zone of
-// a maskable icon (a circle of 80% of the side), so that a platform rounds or masks them itself.
+// resvg reads no media query, so the mark's colours are set here for its ground. The accent reads
+// in either theme, so one ground serves both: a web manifest cannot choose its icons by colour
+// scheme. The app icons are square and full-bleed, the mark inside the safe zone of a maskable
+// icon (a circle of 80% of the side), so that a platform rounds or masks them itself.
 // The favicon is the fallback of the SVG favicon (the logo itself, whose media query follows the
 // browser's theme): on the accent, it reads on a light tab and on a dark one, and a browser that
 // asks the site's root for favicon.ico, as the libraries' pages leave it to, finds it.
@@ -22,22 +25,17 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises'
 import {dirname, join, resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {Resvg} from '@resvg/resvg-js'
+import {drawing, withoutMediaQueries} from './drawing.mjs'
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 /**
- * Each ground and the mark's colours on it, the arms and the globe in `ink`, the angle brackets in
- * `accent`. Contrast of the angle brackets with the ground:
- * | ground | angle brackets       | arms and globe        |
- * | accent | #000000 on #5b3fd9, 3.16 | #ffffff on #5b3fd9, 6.65 |
- * | light  | #5b3fd9 on #ffffff, 6.65 | #1d1d1f on #ffffff, 16.83 |
- * | dark   | #9d8cff on #000000, 7.63 | #f5f5f7 on #000000, 19.29 |
- * Tip: on the accent, the site's near-black ink, #1d1d1f, gives 2.53, under a graphic's 3 to 1.
+ * The ground and the mark's colours on it, the arms and the globe in `ink`, the angle brackets in
+ * `accent`: white, 6.65 to 1 on the accent, and black, 3.16.
+ * Tip: the site's near-black ink, #1d1d1f, would give the angle brackets 2.53, under a graphic's 3.
  */
 export const grounds = {
     accent: {ground: '#5b3fd9', ink: '#ffffff', accent: '#000000'},
-    light: {ground: '#ffffff', ink: '#1d1d1f', accent: '#5b3fd9'},
-    dark: {ground: '#000000', ink: '#f5f5f7', accent: '#9d8cff'},
 }
 
 /** The app icons' sizes, the Apple touch icon's and the favicon's. */
@@ -49,19 +47,6 @@ export const faviconSizes = [16, 32, 48]
 const appScale = 0.625
 const faviconScale = 0.875
 const faviconRadius = 12
-
-/** What assets/logo.svg draws, its defs and its strokes, without its title, style and comments. */
-export function drawing(logo) {
-    const inner = logo.match(/^[\s\S]*?<svg[^>]*>([\s\S]*)<\/svg>\s*$/)
-    if (!inner) {
-        throw new Error('assets/logo.svg: no <svg> root to draw from')
-    }
-    return inner[1]
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/<title[^>]*>[\s\S]*?<\/title>/g, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/g, '')
-        .trim()
-}
 
 /**
  * The SVG of the mark on `ground`'s colours, on a 64 by 64 tile with corners of `radius`, the
@@ -106,18 +91,25 @@ export function ico(images) {
     return Buffer.concat([header, ...entries, ...images.map(image => image.png)])
 }
 
+/**
+ * assets/logo.svg with the light theme's colours alone: its stylesheet without the media query
+ * that turns it dark, so that it is light whatever the browser makes of an image's colour scheme.
+ */
+export function lightLogo(logo) {
+    return logo.replace(/<style>([\s\S]*?)<\/style>/, (_, css) => `<style>${withoutMediaQueries(css)}</style>`)
+}
+
 /** Every icon, as `{file, data}`, `file` from the site's root. */
 export async function icons() {
     const logo = await readFile(join(site, 'assets/logo.svg'), 'utf8')
     const files = []
-    for (const ground of Object.keys(grounds)) {
-        for (const size of appSizes) {
-            files.push({file: `assets/icons/icon-${ground}-${size}.png`, data: render(iconSvg(logo, ground, appScale), size).png})
-        }
+    for (const size of appSizes) {
+        files.push({file: `assets/icons/icon-accent-${size}.png`, data: render(iconSvg(logo, 'accent', appScale), size).png})
     }
     files.push({file: 'assets/icons/apple-touch-icon.png', data: render(iconSvg(logo, 'accent', appScale), appleSize).png})
     const favicon = iconSvg(logo, 'accent', faviconScale, faviconRadius)
     files.push({file: 'favicon.ico', data: ico(faviconSizes.map(size => ({size, png: render(favicon, size).png})))})
+    files.push({file: 'assets/logo-light.svg', data: Buffer.from(lightLogo(logo))})
     return files
 }
 

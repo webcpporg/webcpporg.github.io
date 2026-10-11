@@ -9,7 +9,8 @@
         "test": "node --test 'test/**/*_test.mjs'",
         "typecheck": "tsc --noEmit",
         "dev": "node tools/dev.mjs",
-        "serve": "node tools/serve.mjs"
+        "serve": "node tools/serve.mjs",
+        "swap": "node tools/swap.mjs"
     },
     "dependencies": {
         "@openuidev/react-lang": "0.4.1",

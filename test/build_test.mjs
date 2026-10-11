@@ -37,7 +37,7 @@ test('--render --chrome writes the docs header, its links from the site\'s root,
     execFileSync(process.execPath, [build, '--render', '--pages', join(site, 'pages'), '--out', out,
         '--context', context, '--chrome', chrome], {stdio: 'inherit'})
     const header = readFileSync(chrome, 'utf8')
-    assert.match(header, /^<header class="site"><a class="logo" href="\.\/"><picture><img src="assets\/logo\.svg"/)
+    assert.match(header, /^<header class="site"><a class="logo" href="\.\/"><picture><img src="assets\/logo-light\.svg"/)
     assert.match(header, /<a href="libraries\/">Libraries<\/a>/)
     assert.match(header, /<p class="band">Preview of main at <code>0123456<\/code>, 2026-10-10<\/p>$/)
     assert.doesNotMatch(header, /aria-current/)
@@ -47,6 +47,12 @@ test('--render --chrome writes the docs header, its links from the site\'s root,
     assert.deepEqual(size(join(out, 'assets/icons/icon-accent-512.png')), [512, 512])
     assert.deepEqual(size(join(out, 'assets/icons/apple-touch-icon.png')), [180, 180])
     assert.ok(existsSync(join(out, 'favicon.ico')))
+})
+
+test("the client bundle carries the mark's drawing alone, never logo.svg's comments and licence", () => {
+    const bundle = readFileSync(join(site, 'build/client/site.js'), 'utf8')
+    assert.ok(bundle.includes('clip-path=\\"url(#angles)\\"') || bundle.includes('clip-path="url(#angles)"'), 'the drawing is there')
+    assert.ok(!bundle.includes("webcpp's mark, as the owner chose it"), 'logo.svg\'s comment is not')
 })
 
 test('--index writes robots.txt, sitemap.xml, llms.txt and libraries.json into a laid-out site', () => {

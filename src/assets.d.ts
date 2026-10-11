@@ -4,7 +4,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // https://www.boost.org/LICENSE_1_0.txt)
 
-/** An SVG of assets/ imported by a component: its text, which the bundles inline (tools/build.mjs). */
+/** assets/logo.svg imported by a component: its drawing alone, which the bundles inline (tools/build.mjs). */
 declare module '*.svg' {
     const text: string
     export default text

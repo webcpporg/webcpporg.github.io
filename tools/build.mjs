@@ -39,6 +39,7 @@ import {dirname, join, relative, resolve} from 'node:path'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {parseArgs} from 'node:util'
 import {writeCards} from './cards.mjs'
+import {drawing} from './drawing.mjs'
 import {writeIcons} from './icons.mjs'
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -68,6 +69,20 @@ const withoutTelemetry = {
     },
 }
 
+/**
+ * The esbuild plugin that gives a component importing assets/logo.svg its drawing alone
+ * (tools/drawing.mjs), so that no bundle carries the file's comments and licence.
+ */
+const markDrawing = {
+    name: 'mark-drawing',
+    setup(build) {
+        build.onLoad({filter: /[\\/]assets[\\/]logo\.svg$/}, async args => ({
+            contents: drawing(await readFile(args.path, 'utf8')),
+            loader: 'text',
+        }))
+    },
+}
+
 async function bundle() {
     const esbuild = await import('esbuild')
     const common = {
@@ -76,9 +91,7 @@ async function bundle() {
         define: {'process.env.NODE_ENV': '"production"'},
         logLevel: 'warning',
         absWorkingDir: site,
-        // The mark's components draw assets/logo.svg inline, from its text.
-        loader: {'.svg': 'text'},
-        plugins: [withoutTelemetry],
+        plugins: [withoutTelemetry, markDrawing],
     }
     await esbuild.build({
         ...common,

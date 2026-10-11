@@ -14,6 +14,8 @@ import {encodeSource, scriptJson} from './source.js'
 import {PageTree} from './tree.js'
 
 export {PageError}
+/** The inline mark, for a test that renders two copies of it on one page. */
+export {Mark} from './components/mark.js'
 export {cardPath} from './head.js'
 export type {Library, SiteContext} from './context.js'
 
@@ -73,7 +75,7 @@ export function pageTitle(file: string, source: string): string {
  * A part of a page for the pages the site does not render itself, which assemble.py inserts:
  * `docs-header`, the Header and the Band every Page shows, after the `<body>` of every library's
  * page. Its links start with `context.root`, which the caller chooses for the pages it inserts it
- * into.
+ * into; its mark is the light one, since those pages are light alone.
  */
 export function renderFragment(name: 'docs-header', context: SiteContext): string {
     if (name !== 'docs-header') {
@@ -81,7 +83,7 @@ export function renderFragment(name: 'docs-header', context: SiteContext): strin
     }
     const renderNode = () => null
     return markup(renderToStaticMarkup(
-        <SharedContext.Provider value={{site: context, addToGraph: () => {}}}>
+        <SharedContext.Provider value={{site: context, addToGraph: () => {}, light: true}}>
             <Header.component props={{}} renderNode={renderNode} />
             <Band.component props={{}} renderNode={renderNode} />
         </SharedContext.Provider>,

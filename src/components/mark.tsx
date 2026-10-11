@@ -5,18 +5,12 @@
 // https://www.boost.org/LICENSE_1_0.txt)
 
 import {useId} from 'react'
-import logo from '../../assets/logo.svg'
-
-/** What assets/logo.svg draws, its defs and its strokes, without its title, style and comments. */
-const drawing = (logo.match(/<svg[^>]*>([\s\S]*)<\/svg>/)?.[1] ?? '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<title[^>]*>[\s\S]*?<\/title>/g, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/g, '')
-    .trim()
+import drawing from '../../assets/logo.svg'
 
 /**
- * The site's mark drawn inline, from assets/logo.svg itself, so that the page's styles colour its
- * parts (`.ink`, `.acc`) and move them (`.arms`, `.angles`, `.globe`).
+ * The site's mark drawn inline, from assets/logo.svg itself, whose drawing alone the build gives
+ * this module (tools/build.mjs), so that the page's styles colour its parts (`.ink`, `.acc`) and
+ * move them (`.arms`, `.angles`, `.globe`).
  * Tip: each copy prefixes the drawing's ids, its clip paths', with one of its own, so that two
  * copies on a page never clip each other's parts.
  */
