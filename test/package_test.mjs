@@ -8,6 +8,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import test from 'node:test'
 
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url)))
 const lock = JSON.parse(readFileSync(new URL('../package-lock.json', import.meta.url)))
 const pinned = {
     'node_modules/@openuidev/react-lang': '0.4.1',
@@ -25,6 +26,14 @@ test('the lockfile pins the versions the plan names', () => {
     for (const [path, version] of Object.entries(pinned)) {
         assert.equal(lock.packages[path]?.version, version, path)
     }
+})
+
+test('npm test bundles first, so it never reads a stale build/server.mjs', () => {
+    // npm runs pretest before test on its own; the build it runs is the build script's own
+    // --bundle step, never a copy of it that could drift from what build is.
+    assert.match(pkg.scripts.pretest, /\bnode tools\/build\.mjs\b/)
+    assert.match(pkg.scripts.pretest, /--bundle\b/)
+    assert.equal(pkg.scripts.build, 'node tools/build.mjs')
 })
 
 test('every npm ci the README shows turns the install telemetry off', () => {

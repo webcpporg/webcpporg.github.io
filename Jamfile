@@ -8,7 +8,15 @@
 # own tests. b2 site, at the superproject, assembles them with every
 # library's page into bin/site/ (its tools/site/site.jam, imported as site).
 import modules ;
+import path ;
 import site ;
+
+# This directory, absolute: an action starts in the directory b2 was started
+# in, the superproject's root, never here.
+.here = [ path.parent [ path.root [ path.make [ modules.binding $(__name__) ] ] [ path.pwd ] ] ] ;
+# The superproject's root, this directory's parent, whose bin/site/ is what
+# valid-html checks.
+.root = [ path.parent $(.here) ] ;
 
 # The superproject's b2 site writes bin/site/, which b2 would make this
 # project's build directory (bin/<its directory>), so it builds in
@@ -62,4 +70,66 @@ actions pages
     echo rendered > "$(<)"
 }
 
-explicit node-modules.stamp node-modules context.json pages.stamp pages ;
+# The site's own tests: its npm test, which bundles first (package.json's
+# pretest, so npm alone never reads a stale build/server.mjs) and runs every
+# test/**/*_test.mjs, and its typecheck. b2 /webcpp/site//test.
+notfile test : @test : : <dependency>node-modules <webcpp-boost-check>off ;
+
+rule test ( targets * : sources * : properties * )
+{
+    TEST on $(targets) = [ site.npm test ] ;
+    TYPECHECK on $(targets) = [ site.npm typecheck ] ;
+}
+
+actions test
+{
+    set -e
+    $(TEST)
+    $(TYPECHECK)
+}
+
+# Every page of bin/site/, the superproject's, is valid HTML:
+# html-validate against .htmlvalidate.json, which extends
+# html-validate:recommended. A dependency of b2 site's last step
+# (tools/site/site.jam), after site-pages has moved bin/site.tmp/ onto
+# bin/site/, so a page that is not valid HTML fails the build, naming the
+# file and this rule.
+#
+# .htmlvalidate.json's own JSON holds no comment, so each rule it turns off
+# is explained here instead:
+#
+#   doctype-style            the shell writes `<!doctype html>` (src/server.tsx), HTML5's own
+#                            spelling; recommended wants it uppercase, a style choice.
+#   void-style               React serialises a void element self-closed, `<img/>`; HTML5 reads
+#                            that as `<img>`, a style choice.
+#   no-inline-style          two generators need a value no static sheet can hold: React's
+#                            hydration-fade overlay (opacity, transition) and a table's column
+#                            widths, which cols computes per table (postprocess.mjs).
+#   attribute-boolean-style  React writes a boolean attribute as `attr=""` (the search form's
+#                            `required`); HTML5 reads that as the bare attribute, a style choice.
+#   attr-case                React keeps the DOM property's spelling for some attributes it
+#                            writes verbatim, `autoComplete`, `spellCheck` (search_form.tsx); HTML
+#                            attributes are read case-insensitively, a style choice.
+#   form-dup-name            the search form's two fields share name="q" on purpose
+#                            (search_form.tsx): a hidden one restricts the search to the site, the
+#                            reader's own holds the terms, and Google joins the two into one query.
+#   no-trailing-whitespace   a listing of pratt's guide shows literal trailing whitespace and
+#                            tabs as the parser's own example output (libs/pratt/doc/pratt.adoc);
+#                            the rule cannot tell that from formatting inside a <pre>, which it
+#                            has no option to exclude.
+notfile valid-html : @valid-html
+  : : <dependency>node-modules <dependency>/webcpp//site-pages <webcpp-boost-check>off ;
+
+rule valid-html ( targets * : sources * : properties * )
+{
+    HTML_VALIDATE on $(targets) = [ path.native $(.here)/node_modules/.bin/html-validate ] ;
+    CONFIG on $(targets) = [ path.native $(.here)/.htmlvalidate.json ] ;
+    PAGES on $(targets) = [ path.native $(.root)/bin/site ] ;
+}
+
+actions valid-html
+{
+    "$(HTML_VALIDATE)" --config "$(CONFIG)" "$(PAGES)/**/*.html"
+}
+
+explicit node-modules.stamp node-modules context.json pages.stamp pages test valid-html ;

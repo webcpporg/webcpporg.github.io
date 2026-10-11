@@ -1,0 +1,14 @@
+{
+    "extends": [
+        "html-validate:recommended"
+    ],
+    "rules": {
+        "doctype-style": "off",
+        "void-style": "off",
+        "no-inline-style": "off",
+        "attribute-boolean-style": "off",
+        "attr-case": "off",
+        "form-dup-name": "off",
+        "no-trailing-whitespace": "off"
+    }
+}

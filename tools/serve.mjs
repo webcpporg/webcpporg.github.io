@@ -14,13 +14,15 @@
 // mean. Each file is served with its type, wasm, the web manifest and modules among them, and
 // without caching, so that a reload shows the last build. A directory is its index.html, reached
 // with its final slash, which the site's relative links need: a path to one without it is
-// redirected there. Nothing outside the directory is served.
+// redirected there. Nothing outside the directory is served. A file that goes missing for the
+// moment dev's rebuild swaps the directory (tools/dev.mjs) is retried, then answered 503; the
+// server never ends on it.
 
-import {createReadStream} from 'node:fs'
-import {stat} from 'node:fs/promises'
+import {open, stat} from 'node:fs/promises'
 import {createServer} from 'node:http'
 import {extname, join, resolve, sep} from 'node:path'
 import {fileURLToPath} from 'node:url'
+import {setTimeout as sleep} from 'node:timers/promises'
 
 export const host = '127.0.0.1'
 export const defaultPort = 8765
@@ -40,6 +42,32 @@ const types = {
     '.txt': 'text/plain; charset=utf-8',
     '.xml': 'application/xml; charset=utf-8',
     '.woff2': 'font/woff2',
+}
+
+// dev.mjs rebuilds by removing the served directory and renaming the next build onto it
+// (tools/dev.mjs, build()): a request already resolved to a file there may find it gone for the
+// moment the swap takes. Ten retries, 10ms apart, cover that window without the reader noticing;
+// past it, the file is answered 503, to try again, never left to an unhandled stream error, which
+// would otherwise end the process.
+const REBUILD_RETRIES = 10
+const REBUILD_DELAY_MS = 10
+
+/**
+ * `file`, open for reading, retried while it is missing (dev's rebuild swapping the directory),
+ * or null once it still is after every retry: a stream only ever opens a file this found, so a
+ * fault once it is reading is never the swap, and is let through as the stream's own 'error'.
+ */
+export async function opened(file) {
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return await open(file, 'r')
+        } catch (error) {
+            if (error.code !== 'ENOENT' || attempt === REBUILD_RETRIES) {
+                return null
+            }
+            await sleep(REBUILD_DELAY_MS)
+        }
+    }
 }
 
 /** The file of `root` that `path` names, a directory standing for its index.html, or null. */
@@ -77,15 +105,27 @@ async function answer(roots, request, response) {
             response.writeHead(301, {location: `${url.pathname}/${url.search}`}).end()
             return
         }
+        if (request.method === 'HEAD') {
+            response.writeHead(200, {
+                'content-type': types[extname(found.file)] ?? 'application/octet-stream',
+                'cache-control': 'no-cache',
+            }).end()
+            return
+        }
+        const handle = await opened(found.file)
+        if (!handle) {
+            response.writeHead(503, {'content-type': types['.txt'], 'retry-after': '1'})
+                .end('The site is being built again; try once more.\n')
+            return
+        }
         response.writeHead(200, {
             'content-type': types[extname(found.file)] ?? 'application/octet-stream',
             'cache-control': 'no-cache',
         })
-        if (request.method === 'HEAD') {
-            response.end()
-        } else {
-            createReadStream(found.file).pipe(response)
-        }
+        // The stream closes handle itself once it is done: handle.close() afterwards would race it.
+        const stream = handle.createReadStream()
+        stream.once('error', () => response.destroy())
+        stream.pipe(response)
         return
     }
     response.writeHead(404, {'content-type': types['.txt']}).end(`Not found: ${url.pathname}\n`)

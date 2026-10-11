@@ -9,12 +9,12 @@
 // which the site's relative links need; nothing outside the directory is served.
 
 import assert from 'node:assert/strict'
-import {mkdirSync, mkdtempSync, writeFileSync} from 'node:fs'
+import {mkdirSync, mkdtempSync, unlinkSync, writeFileSync} from 'node:fs'
 import {request} from 'node:http'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import test from 'node:test'
-import {serve} from '../tools/serve.mjs'
+import {opened, serve} from '../tools/serve.mjs'
 
 const work = mkdtempSync(join(tmpdir(), 'webcpp-serve-'))
 const root = join(work, 'site')
@@ -70,6 +70,25 @@ test('a directory without its slash is redirected to it, and nothing outside the
         assert.equal(answer.status, 404, path)
         assert.doesNotMatch(answer.body, /outside the site/, path)
     }
+})
+
+test('a file briefly missing, as dev\'s rebuild swap (rm-rf then rename) leaves it, is retried and opens once it is back', async () => {
+    const file = join(work, 'swap.txt')
+    writeFileSync(file, 'first')
+    unlinkSync(file)
+    const timer = setTimeout(() => writeFileSync(file, 'second'), 20)
+    try {
+        const handle = await opened(file)
+        assert.ok(handle, 'opened retried until the file came back')
+        assert.equal(await handle.readFile('utf8'), 'second')
+        await handle.close()
+    } finally {
+        clearTimeout(timer)
+    }
+})
+
+test('a file still missing past every retry answers null, never an unhandled stream error', async () => {
+    assert.equal(await opened(join(work, 'never written.txt')), null)
 })
 
 test('a file missing from the first directory is served from the next', async t => {
