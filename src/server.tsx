@@ -41,6 +41,11 @@ export function renderPage(file: string, source: string, context: SiteContext): 
         '<meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
         writeHead(head),
+        // The SVG favicon follows the browser's theme; favicon.ico, sized so that a browser that
+        // reads the SVG prefers it, is the fallback (tools/icons.mjs).
+        `<link rel="icon" href="${attribute(context.root)}favicon.ico" sizes="32x32">`,
+        `<link rel="icon" href="${attribute(context.root)}assets/logo.svg" type="image/svg+xml">`,
+        `<link rel="apple-touch-icon" href="${attribute(context.root)}assets/icons/apple-touch-icon.png">`,
         `<link rel="stylesheet" href="${attribute(context.root)}assets/chrome.css">`,
         `<link rel="stylesheet" href="${attribute(context.root)}assets/site.css">`,
         `<script type="module" src="${attribute(context.root)}assets/site.js"></script>`,

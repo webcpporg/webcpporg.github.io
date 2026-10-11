@@ -7,14 +7,16 @@
 // The pages' social cards, which the build's --render step writes: for each page, a PNG of 1200
 // by 630 at the path its head names in og:image and twitter:image (head.ts's cardPath).
 //
-// Each is assets/card.svg with assets/logo.svg drawn in it and the page's title set in its text,
-// rendered by @resvg/resvg-js with Inter, from @expo-google-fonts/inter (SIL OFL 1.1), pinned
-// by the lockfile, and no font of the system: a card is the same bytes on every machine.
+// Each is assets/card.svg with assets/logo.svg's drawing in it, in the colours the template sets,
+// and the page's title set in its text, rendered by @resvg/resvg-js with Inter, from
+// @expo-google-fonts/inter (SIL OFL 1.1), pinned by the lockfile, and no font of the system: a
+// card is the same bytes on every machine.
 
 import {mkdir, readFile, writeFile} from 'node:fs/promises'
 import {dirname, join, resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {Resvg} from '@resvg/resvg-js'
+import {drawing} from './icons.mjs'
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -42,15 +44,6 @@ const width = 1200
 /** At most this many lines; a longer title is set smaller. */
 const maxLines = 3
 const smallest = 40
-
-/** What assets/logo.svg draws: its root's content, without its title and comments. */
-function drawing(logo) {
-    const inner = logo.match(/^[\s\S]*?<svg[^>]*>([\s\S]*)<\/svg>\s*$/)
-    if (!inner) {
-        throw new Error('assets/logo.svg: no <svg> root to draw from')
-    }
-    return inner[1].replace(/<!--[\s\S]*?-->/g, '').replace(/<title[^>]*>[\s\S]*?<\/title>/g, '')
-}
 
 function escape(text) {
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -85,7 +78,7 @@ function compose(template, logo, lines, size) {
     // A line's baseline sits about 0.35 em under the middle of its capitals.
     const first = Number(y) - (leading * (lines.length - 1)) / 2 + size * 0.35
     const sized = style.replace(/font-size:\s*\d+px/, `font-size: ${size}px`)
-    // Each tspan repeats the style: the logo's stylesheet colours every tspan of the document.
+    // Each tspan repeats the style, so that every line is set as the template's text is.
     const spans = lines.map((line, i) =>
         `<tspan x="${x}" y="${(first + i * leading).toFixed(1)}" style="${sized}">${escape(line)}</tspan>`)
     return template

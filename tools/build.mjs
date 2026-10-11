@@ -13,7 +13,8 @@
 //       renders every <dir>/**/*.oui into <out>/<path>/index.html with the context the file
 //       holds, and its social card into <out>/cards/ (tools/cards.mjs), with a card for the page
 //       of each library of the context's catalogue, which b2 site takes from the libraries'
-//       docs, and copies assets/ and the client bundle into <out>/assets/. With --chrome, it
+//       docs, the icons and the favicon (tools/icons.mjs), and copies assets/ and the client
+//       bundle into <out>/assets/. With --chrome, it
 //       also writes into <file> the header the libraries' pages show (renderFragment's
 //       `docs-header`), its links from the site's root, which tools/ci/assemble.py rebases for
 //       each page it heads;
@@ -38,6 +39,7 @@ import {dirname, join, relative, resolve} from 'node:path'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {parseArgs} from 'node:util'
 import {writeCards} from './cards.mjs'
+import {writeIcons} from './icons.mjs'
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -74,6 +76,8 @@ async function bundle() {
         define: {'process.env.NODE_ENV': '"production"'},
         logLevel: 'warning',
         absWorkingDir: site,
+        // The mark's components draw assets/logo.svg inline, from its text.
+        loader: {'.svg': 'text'},
         plugins: [withoutTelemetry],
     }
     await esbuild.build({
@@ -136,6 +140,7 @@ async function render({pages, out, context: contextFile, chrome}) {
         cards.push({file: cardPath(library.page), title: library.name})
     }
     await writeCards(out, cards)
+    await writeIcons(out)
     await cp(join(site, 'assets'), join(out, 'assets'), {recursive: true})
     await cp(join(site, 'build/client/site.js'), join(out, 'assets/site.js'))
     if (chrome) {

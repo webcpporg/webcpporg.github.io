@@ -47,6 +47,31 @@ test("the header, the band and the footer are OpenUI's, inside #root, and the do
     assert.ok(root.includes(renderFragment('docs-header', context)))
 })
 
+test('the head links the favicon, its fallback and the Apple touch icon, from the site\'s root', () => {
+    const html = renderPage('pages/libraries.oui', page, {...context, root: '../', path: 'libraries/'})
+    assert.match(html, /<link rel="icon" href="\.\.\/favicon\.ico" sizes="32x32">\n<link rel="icon" href="\.\.\/assets\/logo\.svg" type="image\/svg\+xml">/)
+    assert.match(html, /<link rel="apple-touch-icon" href="\.\.\/assets\/icons\/apple-touch-icon\.png">/)
+})
+
+test("the hero draws the mark inline, its clip paths' ids its own, and every reference to them resolves", () => {
+    const html = renderPage('pages/index.oui', page, context)
+    const mark = html.match(/<svg class="mark opening"[^>]*>[\s\S]*?<\/svg>/)?.[0]
+    assert.ok(mark, 'the hero holds the mark')
+    assert.match(mark, /aria-hidden="true"/)
+    const ids = [...mark.matchAll(/ id="([^"]+)"/g)].map(found => found[1])
+    assert.ok(ids.length >= 2)
+    for (const id of ids) {
+        assert.match(id, /^mark[\w-]+-(arms|angles)$/, `${id} carries the copy's prefix`)
+    }
+    for (const [, reference] of mark.matchAll(/url\(#([^)]+)\)/g)) {
+        assert.ok(ids.includes(reference), `url(#${reference}) resolves`)
+    }
+    for (const part of ['arms', 'angles', 'globe']) {
+        assert.match(mark, new RegExp(`class="[^"]*\\b${part}\\b`), part)
+    }
+    assert.doesNotMatch(mark, /<style|<title/)
+})
+
 test('the page source in the shell cannot close its script element', () => {
     const tricky = 'root = Page("x", "</script><b> Header-only C++20 libraries for the web: compiled to WebAssembly for the browser with Emscripten, to WASI for servers, o", [])\n'
     const html = renderPage('pages/x.oui', tricky, context)

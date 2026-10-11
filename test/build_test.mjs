@@ -25,7 +25,7 @@ function size(file) {
     return [png.readUInt32BE(16), png.readUInt32BE(20)]
 }
 
-test('--render --chrome writes the docs header, its links from the site\'s root, and a card per library', () => {
+test('--render --chrome writes the docs header, its links from the site\'s root, a card per library and the icons', () => {
     const work = mkdtempSync(join(tmpdir(), 'webcpp-build-'))
     const context = join(work, 'context.json')
     writeFileSync(context, JSON.stringify({
@@ -44,6 +44,9 @@ test('--render --chrome writes the docs header, its links from the site\'s root,
     for (const library of catalogue) {
         assert.deepEqual(size(join(out, `cards/${library.page.replace(/\/$/, '')}.png`)), [1200, 630], library.key)
     }
+    assert.deepEqual(size(join(out, 'assets/icons/icon-accent-512.png')), [512, 512])
+    assert.deepEqual(size(join(out, 'assets/icons/apple-touch-icon.png')), [180, 180])
+    assert.ok(existsSync(join(out, 'favicon.ico')))
 })
 
 test('--index writes robots.txt, sitemap.xml, llms.txt and libraries.json into a laid-out site', () => {

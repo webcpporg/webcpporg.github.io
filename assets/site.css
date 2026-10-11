@@ -7,10 +7,11 @@
  */
 
 /*
- * The site's provisional theme, until the owner chooses the design (Task 8): written for a
- * 360 px screen first, then widened at 768, 1280 and 1440 px; light and dark; one accent. Its
- * tokens, light, and the header and the band are chrome.css's, which every page links first:
- * the libraries' pages and the docs index, whose own style is Asciidoctor's, link it alone.
+ * The site's theme, as the owner chose it (Task 8, design/home-mockup.html): Apple's restraint,
+ * large type, much space, one accent, violet, and motion only where it explains. Written for a
+ * 360 px screen first, then widened at 768, 1280 and 1440 px; light and dark. Its tokens, light,
+ * and the header and the band are chrome.css's, which every page links first: the libraries'
+ * pages and the docs index, whose own style is Asciidoctor's, link it alone.
  */
 
 :root {
@@ -24,7 +25,9 @@
         --text: #f5f5f7;
         --muted: #a1a1a6;
         --rule: #38383a;
-        --accent: #2997ff;
+        /* 7.63 to 1 on black, 6.18 on the surface; the fill under white text 5.86. */
+        --accent: #9d8cff;
+        --accent-fill: #6246ea;
     }
 }
 
@@ -86,8 +89,10 @@ main {
 
 h1,
 h2 {
+    font-weight: 700;
     line-height: 1.1;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
 }
 
 h1 {
@@ -96,12 +101,24 @@ h1 {
 }
 
 h2 {
-    margin: 48px 0 16px;
-    font-size: 26px;
+    margin: 0 0 12px;
+    font-size: 28px;
 }
 
 main p {
     max-width: 68ch;
+    text-wrap: pretty;
+}
+
+/* Each section of a page opens under a rule, after much space. */
+main > section {
+    margin-top: 48px;
+    padding-top: 48px;
+    border-top: 1px solid var(--rule);
+}
+
+main > section > p {
+    color: var(--muted);
 }
 
 /* A link that stands as a block of the page is a line of its own, so that two never run together. */
@@ -130,20 +147,35 @@ main li code {
     white-space: nowrap;
 }
 
+/*
+ * The hero: the mark above the heading on a phone, beside it from 768px. As the page opens, the
+ * mark's arms close round its angle brackets and its globe, which appear inside them: C++
+ * embracing the web. The arms stay opaque, so that nothing shows through the joints' seams.
+ */
+
 .hero {
-    padding: 24px 0 40px;
+    display: grid;
+    gap: 28px;
+    padding: 8px 0 8px;
+}
+
+.hero-figure {
+    order: -1;
 }
 
 .hero h1 {
-    margin-bottom: 16px;
-    font-size: 40px;
+    margin: 0 0 16px;
+    font-size: 44px;
+    line-height: 1.04;
+    letter-spacing: -0.035em;
 }
 
 .hero .subtitle {
-    margin: 0 0 24px;
+    max-width: 34em;
+    margin: 0 0 28px;
     color: var(--muted);
-    font-size: 21px;
-    line-height: 1.35;
+    font-size: 19px;
+    line-height: 1.4;
 }
 
 .hero .actions {
@@ -154,11 +186,18 @@ main li code {
 }
 
 .hero .actions a {
-    padding: 10px 20px;
+    padding: 11px 22px;
     border-radius: 980px;
     background: var(--accent-fill);
     color: #ffffff;
+    font-size: 16px;
     font-weight: 500;
+}
+
+.hero .actions a + a {
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--accent);
+    color: var(--accent);
 }
 
 .hero .actions a:hover {
@@ -166,35 +205,156 @@ main li code {
     filter: brightness(1.1);
 }
 
-/* Doors and targets: cards, one per row on a phone. */
+.mark {
+    display: block;
+    overflow: visible;
+}
 
-.doors,
+.mark .ink {
+    stroke: var(--text);
+}
+
+.mark .acc {
+    stroke: var(--accent);
+}
+
+.hero .mark {
+    width: 96px;
+    height: 96px;
+}
+
+.mark.opening .arms,
+.mark.opening .angles,
+.mark.opening .globe {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+}
+
+.mark.opening .arms {
+    animation: embrace 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.mark.opening .angles,
+.mark.opening .globe {
+    animation: appear 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes embrace {
+    from {
+        transform: scaleX(1.25);
+    }
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mark.opening .arms,
+    .mark.opening .angles,
+    .mark.opening .globe {
+        animation: none;
+    }
+}
+
+/* The targets: one rail runs through the three, the same code reaching each; down on a phone. */
+
 .targets {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-    margin: 0 0 16px;
+    margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.doors li,
 .targets li {
-    padding: 20px;
-    border-radius: 16px;
-    background: var(--surface);
+    position: relative;
+    padding: 0 0 28px 32px;
 }
 
-.doors a,
+.targets li:last-child {
+    padding-bottom: 0;
+}
+
+.targets li::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 0;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.targets li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 19px;
+    bottom: -8px;
+    left: 5px;
+    width: 1px;
+    background: var(--rule);
+}
+
 .targets strong {
     display: block;
-    margin-bottom: 4px;
-    font-size: 19px;
+    font-size: 21px;
     font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
-.doors p,
 .targets p {
+    margin: 2px 0 0;
+    color: var(--muted);
+}
+
+/* The doors: three large lines, each row a link as wide as the page. */
+
+.doors {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.doors li {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    padding: 20px 0;
+}
+
+.doors li + li {
+    border-top: 1px solid var(--rule);
+}
+
+.doors li:last-child {
+    padding-bottom: 0;
+}
+
+.doors a {
+    color: var(--text);
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.doors a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.doors a:hover,
+.doors li:hover a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.doors p {
     margin: 0;
     color: var(--muted);
 }
@@ -362,17 +522,79 @@ footer.site p {
         font-size: 44px;
     }
 
+    h2 {
+        font-size: 36px;
+    }
+
+    main > section {
+        margin-top: 64px;
+        padding-top: 64px;
+    }
+
+    .hero {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 48px;
+        padding: 24px 0 24px;
+    }
+
+    .hero-figure {
+        order: 0;
+    }
+
     .hero h1 {
-        font-size: 56px;
+        font-size: 64px;
     }
 
     .hero .subtitle {
-        font-size: 24px;
+        font-size: 22px;
     }
 
-    .doors,
+    .hero .mark {
+        width: 200px;
+        height: 200px;
+    }
+
     .targets {
+        display: grid;
         grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+    }
+
+    .targets li {
+        padding: 32px 0 0;
+    }
+
+    .targets li::before {
+        top: 0;
+    }
+
+    .targets li:not(:last-child)::after {
+        top: 5px;
+        right: -32px;
+        bottom: auto;
+        left: 11px;
+        width: auto;
+        height: 1px;
+    }
+
+    .doors li {
+        grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+        align-items: baseline;
+        gap: 32px;
+        padding: 28px 0;
+    }
+
+    .doors li:last-child {
+        padding-bottom: 0;
+    }
+
+    .doors a {
+        font-size: 36px;
+    }
+
+    .doors p {
+        font-size: 19px;
     }
 
     .libraries thead {
@@ -409,15 +631,20 @@ footer.site p {
 
 @media (min-width: 1280px) {
     .hero {
-        padding: 48px 0 64px;
+        padding: 48px 0 40px;
     }
 
     .hero h1 {
-        font-size: 72px;
+        font-size: 84px;
     }
 
     .hero .subtitle {
-        font-size: 28px;
+        font-size: 24px;
+    }
+
+    .hero .mark {
+        width: 260px;
+        height: 260px;
     }
 }
 
@@ -427,6 +654,6 @@ footer.site p {
     }
 
     .hero h1 {
-        font-size: 80px;
+        font-size: 88px;
     }
 }
