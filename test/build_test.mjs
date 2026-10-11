@@ -25,7 +25,7 @@ function size(file) {
     return [png.readUInt32BE(16), png.readUInt32BE(20)]
 }
 
-test('--render --chrome writes the docs header, its links from the site\'s root, a card per library and the icons', () => {
+test('--render --chrome --site-chrome writes the docs header and the site header, their links from the site\'s root, a card per library and the icons', () => {
     const work = mkdtempSync(join(tmpdir(), 'webcpp-build-'))
     const context = join(work, 'context.json')
     writeFileSync(context, JSON.stringify({
@@ -34,8 +34,12 @@ test('--render --chrome writes the docs header, its links from the site\'s root,
     }))
     const out = join(work, 'pages')
     const chrome = join(work, 'docs-header.html')
+    const siteChrome = join(work, 'site-header.html')
     execFileSync(process.execPath, [build, '--render', '--pages', join(site, 'pages'), '--out', out,
-        '--context', context, '--chrome', chrome], {stdio: 'inherit'})
+        '--context', context, '--chrome', chrome, '--site-chrome', siteChrome], {stdio: 'inherit'})
+    const siteHeader = readFileSync(siteChrome, 'utf8')
+    assert.match(siteHeader, /^<header class="site"><a class="logo" href="\.\/"><picture><img src="assets\/logo\.svg"/)
+    assert.match(siteHeader, /<p class="band">Preview of main at <code>0123456<\/code>, 2026-10-10<\/p>$/)
     const header = readFileSync(chrome, 'utf8')
     assert.match(header, /^<header class="site"><a class="logo" href="\.\/"><picture><img src="assets\/logo-light\.svg"/)
     assert.match(header, /<a href="libraries\/">Libraries<\/a>/)

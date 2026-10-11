@@ -72,18 +72,21 @@ export function pageTitle(file: string, source: string): string {
 }
 
 /**
- * A part of a page for the pages the site does not render itself, which assemble.py inserts:
- * `docs-header`, the Header and the Band every Page shows, after the `<body>` of every library's
- * page. Its links start with `context.root`, which the caller chooses for the pages it inserts it
- * into; its mark is the light one, since those pages are light alone.
+ * A part of a page for the pages the site does not render itself, which assemble.py inserts after
+ * their `<body>`: the Header and the Band every Page shows. `docs-header` heads every library's
+ * page and the docs index, Asciidoctor's pages, which are light alone, so its mark is the light
+ * one; `site-header` heads a page of the site's own style that the site does not render (the
+ * report's when the build was given no results), which turns dark with the reader's theme, so its
+ * mark is the theme's, as a Page's. Their links start with `context.root`, which the caller
+ * chooses for the pages it inserts them into.
  */
-export function renderFragment(name: 'docs-header', context: SiteContext): string {
-    if (name !== 'docs-header') {
+export function renderFragment(name: 'docs-header' | 'site-header', context: SiteContext): string {
+    if (name !== 'docs-header' && name !== 'site-header') {
         throw new Error(`${name} is not a fragment of the site`)
     }
     const renderNode = () => null
     return markup(renderToStaticMarkup(
-        <SharedContext.Provider value={{site: context, addToGraph: () => {}, light: true}}>
+        <SharedContext.Provider value={{site: context, addToGraph: () => {}, light: name === 'docs-header'}}>
             <Header.component props={{}} renderNode={renderNode} />
             <Band.component props={{}} renderNode={renderNode} />
         </SharedContext.Provider>,

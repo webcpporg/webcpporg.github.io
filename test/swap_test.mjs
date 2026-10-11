@@ -12,12 +12,12 @@
 
 import assert from 'node:assert/strict'
 import {execFileSync, spawn} from 'node:child_process'
-import {existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync} from 'node:fs'
+import {existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, renameSync, symlinkSync, writeFileSync} from 'node:fs'
 import {Agent, request} from 'node:http'
 import {tmpdir} from 'node:os'
-import {join} from 'node:path'
+import {dirname, join} from 'node:path'
 import test from 'node:test'
-import {swap} from '../tools/swap.mjs'
+import {pointTo, swap} from '../tools/swap.mjs'
 import {serve} from '../tools/serve.mjs'
 import {site} from './site.mjs'
 
@@ -119,3 +119,87 @@ test('swap replaces a real directory at the link, the layout bin/site had before
     assert.ok(lstatSync(link).isSymbolicLink())
     assert.match(readFileSync(join(link, 'index.html'), 'utf8'), /home 1/)
 })
+
+/** A bin/ with a link onto its one build, and a directory of someone else's beside them. */
+function layout() {
+    const bin = join(mkdtempSync(join(tmpdir(), 'webcpp-swap-')), 'bin')
+    mkdirSync(join(bin, 'keep-me'), {recursive: true})
+    writeFileSync(join(bin, 'keep-me/data'), 'not a build')
+    const builds = join(bin, 'site.builds')
+    const link = join(bin, 'site')
+    return {bin, builds, link}
+}
+
+/** Every path under `directory`, with what each file holds, for a before and after. */
+function snapshot(directory) {
+    return readdirSync(directory, {recursive: true}).sort().map(entry => {
+        const path = join(directory, entry)
+        const stat = lstatSync(path)
+        return [entry, stat.isSymbolicLink() ? `-> ${readlinkSync(path)}` : stat.isFile() ? readFileSync(path, 'utf8') : 'dir']
+    })
+}
+
+/** The exit status and the standard error of the swap script run with `args`. */
+function script(...args) {
+    try {
+        execFileSync(process.execPath, [join(site, 'tools/swap.mjs'), ...args], {stdio: 'pipe'})
+        return {status: 0, stderr: ''}
+    } catch (error) {
+        return {status: error.status, stderr: error.stderr.toString()}
+    }
+}
+
+test('swap refuses a build that is not an existing directory, exit 2, and touches nothing', async () => {
+    const {bin, builds, link} = layout()
+    await swap(link, build(builds, 1))
+    const before = snapshot(bin)
+    for (const missing of [join(bin, 'typo-build'), join(builds, 'build-missing')]) {
+        const {status, stderr} = script(link, missing)
+        assert.equal(status, 2, missing)
+        assert.match(stderr, /is not a directory/)
+        assert.deepEqual(snapshot(bin), before, missing)
+    }
+    await assert.rejects(swap(link, join(builds, 'build-missing')), /is not a directory/)
+    assert.deepEqual(snapshot(bin), before)
+})
+
+test("swap refuses a build outside the link's own builds directory, and touches nothing", async () => {
+    const {bin, builds, link} = layout()
+    await swap(link, build(builds, 1))
+    const elsewhere = build(join(bin, 'elsewhere'), 2)
+    const before = snapshot(bin)
+    const {status, stderr} = script(link, elsewhere)
+    assert.equal(status, 2)
+    assert.match(stderr, /site\.builds/)
+    assert.deepEqual(snapshot(bin), before)
+})
+
+test("swap removes only the builds of the link's builds directory, never an entry that is not one", async () => {
+    const {bin, builds, link} = layout()
+    await swap(link, build(builds, 1))
+    writeFileSync(join(builds, 'notes.txt'), 'mine')
+    await swap(link, build(builds, 2))
+    assert.deepEqual(readdirSync(builds).sort(), ['build-2', 'notes.txt'])
+    assert.ok(existsSync(join(bin, 'keep-me/data')))
+})
+
+test('pointTo removes only the stale next links it once made, never an entry that merely shares their name', async () => {
+    const {bin, builds, link} = layout()
+    const target = build(builds, 1)
+    symlinkSync(target, join(bin, 'site.next-123'), 'dir')
+    writeFileSync(join(bin, 'site.next-notes'), 'mine')
+    mkdirSync(join(bin, 'site.next-456'))
+    writeFileSync(join(bin, 'site.next-456/data'), 'mine too')
+    await pointTo(link, target)
+    assert.deepEqual(readdirSync(bin).sort(), ['keep-me', 'site', 'site.builds', 'site.next-456', 'site.next-notes'])
+})
+
+test('the link points to its build relatively, so that a checkout moved elsewhere still reads it', async () => {
+    const {bin, builds, link} = layout()
+    await swap(link, build(builds, 1))
+    assert.equal(readlinkSync(link), join('site.builds', 'build-1'))
+    const moved = join(dirname(bin), 'moved')
+    renameSync(bin, moved)
+    assert.match(readFileSync(join(moved, 'site/index.html'), 'utf8'), /home 1/)
+})
+

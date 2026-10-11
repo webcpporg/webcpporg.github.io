@@ -42,9 +42,11 @@ make context.json : /webcpp//libraries.json : @site%write-context : <webcpp-boos
 always context.json ;
 
 # The pages, rendered by the npm script build into pages/ beside the stamp,
-# with their cards, assets and the client bundle, and the header of the
-# libraries' pages, docs-header.html, which b2 site lays out. Both are removed
-# first, so that a page deleted from pages/ is gone from what b2 site reads.
+# with their cards, assets and the client bundle, and the two headers b2 site
+# lays out: docs-header.html, of the libraries' light pages, and
+# site-header.html, of a page of the site's own style it does not render (the
+# report's). All are removed first, so that a page deleted from pages/ is gone
+# from what b2 site reads.
 make pages.stamp : context.json : @pages
   : <dependency>node-modules <webcpp-boost-check>off ;
 always pages.stamp ;
@@ -54,7 +56,8 @@ rule pages ( targets * : sources * : properties * )
 {
     BUNDLE on $(targets) = [ site.npm build : --bundle ] ;
     RENDER on $(targets) = [ site.npm build : --render --pages pages --out $out/pages
-        --context $context --chrome $out/docs-header.html ] ;
+        --context $context --chrome $out/docs-header.html
+        --site-chrome $out/site-header.html ] ;
 }
 
 actions pages
@@ -64,7 +67,7 @@ actions pages
     out=`cd "$out" && pwd`
     context=`dirname "$(>)"`
     context=`cd "$context" && pwd`/`basename "$(>)"`
-    rm -rf "$out/pages" "$out/docs-header.html"
+    rm -rf "$out/pages" "$out/docs-header.html" "$out/site-header.html"
     $(BUNDLE)
     $(RENDER)
     echo rendered > "$(<)"

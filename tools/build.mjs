@@ -10,14 +10,15 @@
 //       bundles src/server.tsx into build/server.mjs, which renders the pages and which the
 //       tests import, and src/client.tsx into build/client/site.js, which the browser runs;
 //   build.mjs --render --pages <dir> --out <dir> --context <file.json> [--chrome <file>]
+//             [--site-chrome <file>]
 //       renders every <dir>/**/*.oui into <out>/<path>/index.html with the context the file
 //       holds, and its social card into <out>/cards/ (tools/cards.mjs), with a card for the page
 //       of each library of the context's catalogue, which b2 site takes from the libraries'
 //       docs, the icons and the favicon (tools/icons.mjs), and copies assets/ and the client
-//       bundle into <out>/assets/. With --chrome, it
-//       also writes into <file> the header the libraries' pages show (renderFragment's
-//       `docs-header`), its links from the site's root, which tools/ci/assemble.py rebases for
-//       each page it heads;
+//       bundle into <out>/assets/. With --chrome, it also writes into <file> the header the
+//       libraries' light pages show (renderFragment's `docs-header`), and with --site-chrome the
+//       header of a page of the site's own style it does not render (`site-header`), each with
+//       its links from the site's root, which tools/ci/assemble.py rebases for each page it heads;
 //   build.mjs --index <site> --base <url> --catalogue <libraries.json> [--superproject <dir>]
 //       writes the files that index a site laid out whole, robots.txt, sitemap.xml, llms.txt and
 //       libraries.json (tools/indexing.mjs, which takes the same options, --index as --site).
@@ -126,7 +127,7 @@ function pathOf(page) {
     return name === 'index' ? '' : name.replace(/\/index$/, '') + '/'
 }
 
-async function render({pages, out, context: contextFile, chrome}) {
+async function render({pages, out, context: contextFile, chrome, 'site-chrome': siteChrome}) {
     const {renderPage, renderFragment, pageTitle, cardPath, PageError} = await import(pathToFileURL(join(site, 'build/server.mjs')).href)
     const context = JSON.parse(await readFile(contextFile, 'utf8'))
     const cards = []
@@ -156,9 +157,11 @@ async function render({pages, out, context: contextFile, chrome}) {
     await writeIcons(out)
     await cp(join(site, 'assets'), join(out, 'assets'), {recursive: true})
     await cp(join(site, 'build/client/site.js'), join(out, 'assets/site.js'))
-    if (chrome) {
-        await mkdir(dirname(resolve(chrome)), {recursive: true})
-        await writeFile(chrome, renderFragment('docs-header', {...context, root: '', path: ''}))
+    for (const [file, fragment] of [[chrome, 'docs-header'], [siteChrome, 'site-header']]) {
+        if (file) {
+            await mkdir(dirname(resolve(file)), {recursive: true})
+            await writeFile(file, renderFragment(fragment, {...context, root: '', path: ''}))
+        }
     }
 }
 
@@ -179,6 +182,7 @@ const {values} = parseArgs({
         out: {type: 'string'},
         context: {type: 'string'},
         chrome: {type: 'string'},
+        'site-chrome': {type: 'string'},
         index: {type: 'string'},
         base: {type: 'string'},
         catalogue: {type: 'string'},
@@ -186,7 +190,7 @@ const {values} = parseArgs({
     },
 })
 if (!values.bundle && !values.render && !values.index) {
-    console.error('usage: build.mjs [--bundle] [--render --pages <dir> --out <dir> --context <file.json> [--chrome <file>]]\n' +
+    console.error('usage: build.mjs [--bundle] [--render --pages <dir> --out <dir> --context <file.json> [--chrome <file>] [--site-chrome <file>]]\n' +
         '                 [--index <site> --base <url> --catalogue <libraries.json> [--superproject <dir>]]')
     process.exit(2)
 }

@@ -54,6 +54,15 @@ test("the header, the band and the footer are OpenUI's, inside #root, and the do
     assert.ok(root.includes(docs.replace('assets/logo-light.svg', 'assets/logo.svg')))
 })
 
+test("the site header, for a page of the site's own that b2 site heads (the report's), is a Page's, its mark the theme's", () => {
+    const html = renderPage('pages/index.oui', page, context)
+    const root = html.slice(html.indexOf('<div id="root">'), html.indexOf('<script type="text/openui"'))
+    const header = renderFragment('site-header', context)
+    assert.ok(header.includes('<img src="assets/logo.svg"'), header)
+    assert.ok(!header.includes('logo-light'), header)
+    assert.ok(root.includes(header))
+})
+
 test('the head links the favicon, its fallback and the Apple touch icon, from the site\'s root', () => {
     const html = renderPage('pages/libraries.oui', page, {...context, root: '../', path: 'libraries/'})
     assert.match(html, /<link rel="icon" href="\.\.\/favicon\.ico" sizes="32x32">\n<link rel="icon" href="\.\.\/assets\/logo\.svg" type="image\/svg\+xml">/)
