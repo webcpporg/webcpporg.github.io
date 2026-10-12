@@ -10,8 +10,9 @@
 // into a site laid out whole.
 
 import assert from 'node:assert/strict'
-import {execFileSync} from 'node:child_process'
-import {existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync} from 'node:fs'
+import {execFileSync, spawnSync} from 'node:child_process'
+import {closeSync, existsSync, fstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync,
+    readSync, statSync, writeFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {dirname, join} from 'node:path'
 import test from 'node:test'
@@ -23,6 +24,13 @@ const build = join(site, 'tools/build.mjs')
 function size(file) {
     const png = readFileSync(file)
     return [png.readUInt32BE(16), png.readUInt32BE(20)]
+}
+
+/** Every byte of the file open as `fd`, read from its start whatever was read before. */
+function whole(fd) {
+    const bytes = Buffer.alloc(fstatSync(fd).size)
+    readSync(fd, bytes, 0, bytes.length, 0)
+    return bytes
 }
 
 test('--render --chrome --site-chrome writes the docs header and the site header, their links from the site\'s root, a card per library and the icons', () => {
@@ -53,18 +61,29 @@ test('--render --chrome --site-chrome writes the docs header and the site header
     assert.ok(existsSync(join(out, 'favicon.ico')))
 })
 
-test('--bundle replaces each bundle whole, by one rename, so a reader never sees one empty or half written', () => {
+test('--bundle replaces each bundle whole, by one rename, so a reader never sees one empty or half written', t => {
     // The bug this proves fixed: esbuild wrote build/server.mjs in place, truncating it first, so
     // render_test.mjs, importing it while dev_test.mjs's rebuild bundled again in the same npm
     // test, once read it empty and failed in CI with "does not provide an export named 'Mark'".
-    // A file renamed onto the path is a new one, with an inode of its own; a file rewritten in
-    // place keeps its inode.
+    // Each bundle is held open across --bundle, as a reader holds it: the path must then name
+    // another file, and the one held must still read whole, as it was. The file is held, not its
+    // inode only noted, because dev_test.mjs bundles in the same npm test: its rename frees the
+    // inode, ext4 gives it to the next file created, and a bundle renamed onto the path then had
+    // the inode noted before (CI run 38189325411). That bundle's own `.next` file may be there
+    // too, so only this --bundle's are looked for.
     const bundles = ['build/server.mjs', 'build/client/site.js'].map(file => join(site, file))
-    const before = new Map(bundles.map(file => [file, statSync(file).ino]))
-    execFileSync(process.execPath, [build, '--bundle'], {stdio: 'inherit'})
+    const held = new Map(bundles.map(file => {
+        const fd = openSync(file, 'r')
+        return [file, {fd, contents: whole(fd)}]
+    }))
+    t.after(() => held.forEach(({fd}) => closeSync(fd)))
+    const {pid, status} = spawnSync(process.execPath, [build, '--bundle'], {stdio: 'inherit'})
+    assert.equal(status, 0)
     for (const file of bundles) {
-        assert.notEqual(statSync(file).ino, before.get(file), `${file} is a new file`)
-        assert.deepEqual(readdirSync(dirname(file)).filter(entry => entry.endsWith('.next')), [],
+        const {fd, contents} = held.get(file)
+        assert.notEqual(statSync(file).ino, fstatSync(fd).ino, `${file} is a new file`)
+        assert.deepEqual(whole(fd), contents, `${file} as it was still reads whole`)
+        assert.deepEqual(readdirSync(dirname(file)).filter(entry => entry.endsWith(`.${pid}.next`)), [],
             `no file being written is left beside ${file}`)
     }
     assert.match(readFileSync(bundles[0], 'utf8'), /^export \{\n {2}Mark,$/m)
