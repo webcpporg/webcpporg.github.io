@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llms.txt and libraries.json, for AI agents - webcpp</title>
+<meta name="description" content="What AI agents read to find webcpp's C++ libraries: llms.txt, a line for every library and page, and libraries.json, the catalogue. Integrations to come.">
+<link rel="canonical" href="https://webcpporg.github.io/ai/">
+<meta name="robots" content="noindex">
+<meta property="og:title" content="llms.txt and libraries.json, for AI agents - webcpp">
+<meta property="og:description" content="What AI agents read to find webcpp's C++ libraries: llms.txt, a line for every library and page, and libraries.json, the catalogue. Integrations to come.">
+<meta property="og:url" content="https://webcpporg.github.io/ai/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="webcpp">
+<meta property="og:image" content="https://webcpporg.github.io/cards/ai.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="llms.txt and libraries.json, for AI agents - webcpp: the page's title beside webcpp's logo">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="llms.txt and libraries.json, for AI agents - webcpp">
+<meta name="twitter:description" content="What AI agents read to find webcpp's C++ libraries: llms.txt, a line for every library and page, and libraries.json, the catalogue. Integrations to come.">
+<meta name="twitter:image" content="https://webcpporg.github.io/cards/ai.png">
+<meta name="twitter:image:alt" content="llms.txt and libraries.json, for AI agents - webcpp: the page's title beside webcpp's logo">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://webcpporg.github.io/#website","url":"https://webcpporg.github.io/","name":"webcpp","inLanguage":"en","publisher":{"@id":"https://webcpporg.github.io/#organization"},"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://webcpporg.github.io/search/?q={search_term_string}"},"query-input":"required name=search_term_string"}},{"@type":"Organization","@id":"https://webcpporg.github.io/#organization","name":"webcpp","url":"https://webcpporg.github.io/","logo":"https://webcpporg.github.io/assets/logo.svg","sameAs":["https://github.com/webcpporg"]},{"@type":"WebPage","@id":"https://webcpporg.github.io/ai/#webpage","url":"https://webcpporg.github.io/ai/","name":"llms.txt and libraries.json, for AI agents - webcpp","description":"What AI agents read to find webcpp's C++ libraries: llms.txt, a line for every library and page, and libraries.json, the catalogue. Integrations to come.","inLanguage":"en","isPartOf":{"@id":"https://webcpporg.github.io/#website"},"breadcrumb":{"@id":"https://webcpporg.github.io/ai/#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://webcpporg.github.io/ai/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"webcpp","item":"https://webcpporg.github.io/"},{"@type":"ListItem","position":2,"name":"llms.txt and libraries.json, for AI agents","item":"https://webcpporg.github.io/ai/"}]}]}</script>
+<link rel="icon" href="../favicon.ico" sizes="32x32">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/chrome.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script type="module" src="../assets/site.js"></script>
+</head>
+<body>
+<noscript>This site needs JavaScript for its examples; every page still reads without it.</noscript>
+<div id="root"><div aria-busy="false" style="opacity:1;transition:opacity 0.2s ease"><header class="site"><a class="logo" href="../"><picture><img src="../assets/logo.svg" alt="" width="28" height="28"/></picture><span>webcpp</span></a><details class="menu"><summary><svg viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path d="M2 5H16M2 9H16M2 13H16"></path></svg>Menu</summary></details><nav aria-label="The site"><a href="../libraries/">Libraries</a><a href="../cpp/">C++</a><a href="../javascript/">JavaScript</a><a href="../ai/" aria-current="page">AI</a><a href="../examples/">Examples</a><a href="../report/">Report</a><a href="../community/">Community</a><a href="../search/">Search</a></nav></header><p class="band">Preview of main at <code>9a268b7</code>, 2026-10-13</p><main><h1>llms.txt and libraries.json, for AI agents</h1><p>AI agents are first-class readers of webcpp: they use what it publishes to find libraries of high quality. The site writes two files for them at its root.</p><section><h2>llms.txt</h2><p>What webcpp is, then a link and a line for every library and every page of the site, after the llms.txt convention.</p><a href="../llms.txt">llms.txt</a></section><section><h2>libraries.json</h2><p>The catalogue the site is built from, read from every library's meta: its key, name, description, categories and targets, its repository and its page, and, for a port, the original it follows, with its language, version and licence.</p><a href="../libraries.json">libraries.json</a></section><section><h2>What is coming</h2><ul class="roadmap"><li>Integrations with the AIs, which bring them within reach of C++ programs.</li><li>Documentation written for AI developers, beside the documentation for C++ developers.</li></ul></section></main><footer class="site"><p>webcpp is free software, under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License 1.0</a>. Its source is <a href="https://github.com/webcpporg/webcpp">on GitHub</a>.</p></footer></div></div>
+<script type="text/openui" id="page-source">// Copyright (c) 2026 WebCpp.org
+//
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// https://www.boost.org/LICENSE_1_0.txt)
+
+root = Page("llms.txt and libraries.json, for AI agents", "What AI agents read to find webcpp's C++ libraries: llms.txt, a line for every library and page, and libraries.json, the catalogue. Integrations to come.", [intro, llms, catalogue, coming])
+
+intro = Text("AI agents are first-class readers of webcpp: they use what it publishes to find libraries of high quality. The site writes two files for them at its root.")
+
+llms = Section("llms.txt", [llmsText, llmsLink])
+llmsText = Text("What webcpp is, then a link and a line for every library and every page of the site, after the llms.txt convention.")
+llmsLink = Link("llms.txt", "llms.txt")
+
+catalogue = Section("libraries.json", [catalogueText, catalogueLink])
+catalogueText = Text("The catalogue the site is built from, read from every library's meta: its key, name, description, categories and targets, its repository and its page, and, for a port, the original it follows, with its language, version and licence.")
+catalogueLink = Link("libraries.json", "libraries.json")
+
+coming = Section("What is coming", [roadmap])
+roadmap = Roadmap(["Integrations with the AIs, which bring them within reach of C++ programs.", "Documentation written for AI developers, beside the documentation for C++ developers."])
+</script>
+<script type="application/json" id="site-context">{"channel":"preview","commit":"9a268b7efa8a9b7eab8810bc024486288c689fab","date":"2026-10-13","version":null,"catalogue":[{"category":["Miscellaneous"],"description":"webcpp's configuration, which every webcpp library includes first: the target a program is built for, whether webcpp has exceptions, and webcpp's version.","key":"config","name":"config","page":"libs/config/","port_of":null,"repository":"https://github.com/webcpporg/config","targets":["emscripten","native","wasip2","wasip3"]},{"category":["Data structures","Parsing"],"description":"A JSON document for C++20 that behaves as JavaScript does, in one relocatable image.","key":"document","name":"document","page":"libs/document/","port_of":null,"repository":"https://github.com/webcpporg/document","targets":["emscripten","native","wasip2","wasip3"]},{"category":["String"],"description":"IDNA2008 and UTS 46 for C++20: Punycode, ToASCII and ToUnicode, and label validity, over generated Unicode 17.0 tables.","key":"idna","name":"idna","page":"libs/idna/","port_of":null,"repository":"https://github.com/webcpporg/idna","targets":["emscripten","native","wasip2","wasip3"]},{"category":["Parsing","String"],"description":"Validators and Boost.URL grammar rules for the string formats of JSON Schema, for C++20.","key":"lexical","name":"lexical","page":"libs/lexical/","port_of":null,"repository":"https://github.com/webcpporg/lexical","targets":["emscripten","native","wasip2","wasip3"]},{"category":["Parsing"],"description":"A generic Pratt parser engine for C++20, with a decimal calculator built on it.","key":"pratt","name":"pratt","page":"libs/pratt/","port_of":null,"repository":"https://github.com/webcpporg/pratt","targets":["emscripten","native","wasip2","wasip3"]},{"category":["Concurrent","IO"],"description":"Serverless WebRTC rooms for C++20, wire compatible with Trystero.","key":"trystero","name":"trystero","page":"libs/trystero/","port_of":{"language":"JavaScript","licence":"MIT","name":"Trystero","url":"https://github.com/dmotz/trystero","version":"0.26.0"},"repository":"https://github.com/webcpporg/trystero","targets":["emscripten","native"]},{"category":["System"],"description":"Header-only helpers for C++ built as WebAssembly components: the HTTP handler a component exports on wasip2 and wasip3, and the macros a program writes its main between.","key":"wasi","name":"wasi","page":"libs/wasi/","port_of":null,"repository":"https://github.com/webcpporg/wasi","targets":["native","wasip2","wasip3"]},{"category":["Concurrent"],"description":"A header-only, deterministic actor system: actors that handle one message at a time, with fuel per execution, timers and a lifecycle.","key":"xactor","name":"xactor","page":"libs/xactor/","port_of":null,"repository":"https://github.com/webcpporg/xactor","targets":["native","wasip2","wasip3"]},{"category":["State"],"description":"A header-only port of XState's state machines and actors: machines read from XState's JSON config, stepped by XState's pure functions or run as actors on xactor.","key":"xstate","name":"xstate","page":"libs/xstate/","port_of":{"language":"TypeScript","licence":"MIT","name":"XState","url":"https://github.com/statelyai/xstate","version":"5.33.2"},"repository":"https://github.com/webcpporg/xstate","targets":["native","wasip2","wasip3"]}],"root":"../","path":"ai/"}</script>
+</body>
+</html>

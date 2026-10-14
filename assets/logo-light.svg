@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title">
+<!--
+  Copyright (c) 2026 WebCpp.org
+
+  Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file LICENSE_1_0.txt or copy at
+  https://www.boost.org/LICENSE_1_0.txt)
+
+  webcpp's mark, as the owner chose it (design/logo-b2b.svg): the web embraced by C++. C++'s
+  braces, in ink, open at their middles into the web's angle brackets, in the accent, and hold
+  the web's globe, in ink, between their four joints.
+  Each joint is cut along the bisector of its angle: the arm ends on that line, and the angle
+  bracket runs 1 unit past it underneath, so that the two colours meet on one straight seam,
+  with no round cap of one over the other and no gap between them.
+  The site draws it inline in the home's hero (src/components/mark.tsx), where its classes name
+  the parts the opening moves and its ids are made unique; the build renders the icons and the
+  favicon from it (tools/icons.mjs), and the cards draw it (tools/cards.mjs). Those renderings
+  set their own colours: resvg reads no media query.
+-->
+<title id="title">webcpp</title>
+<style>
+.ink { stroke: #1d1d1f; }
+.acc { stroke: #5b3fd9; }
+</style>
+<defs>
+  <clipPath id="arms"><path clip-rule="evenodd" d="M0 0H64V64H0ZM26 22.9L0 12.13L0 51.87L26 41.1ZM38 22.9L64 12.13L64 51.87L38 41.1Z"/></clipPath>
+  <clipPath id="angles"><path d="M26 21.82L0 11.05L0 52.95L26 42.18ZM38 21.82L64 11.05L64 52.95L38 42.18Z"/></clipPath>
+</defs>
+<g fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+  <path class="acc angles" clip-path="url(#angles)" d="M19 20L7 32L19 44M45 20L57 32L45 44"/>
+  <path class="ink arms" clip-path="url(#arms)" d="M26 7C21 7 19 9 19 14V20L7 32L19 44V50C19 55 21 57 26 57M38 7C43 7 45 9 45 14V20L57 32L45 44V50C45 55 43 57 38 57"/>
+  <g class="ink globe" stroke-width="3.5">
+    <circle cx="32" cy="32" r="11"/>
+    <ellipse cx="32" cy="32" rx="4.5" ry="11"/>
+    <path d="M21 32H43"/>
+  </g>
+</g>
+</svg>

@@ -1,0 +1,32 @@
+# webcpp
+
+> Header-only C++ libraries for the web: the same code runs in the browser with Emscripten, on servers as WASI WebAssembly containers, and natively.
+
+## Libraries
+
+- [config](https://webcpporg.github.io/libs/config/): webcpp's configuration, which every webcpp library includes first: the target a program is built for, whether webcpp has exceptions, and webcpp's version.
+- [document](https://webcpporg.github.io/libs/document/): A JSON document for C++20 that behaves as JavaScript does, in one relocatable image.
+- [idna](https://webcpporg.github.io/libs/idna/): IDNA2008 and UTS 46 for C++20: Punycode, ToASCII and ToUnicode, and label validity, over generated Unicode 17.0 tables.
+- [lexical](https://webcpporg.github.io/libs/lexical/): Validators and Boost.URL grammar rules for the string formats of JSON Schema, for C++20.
+- [pratt](https://webcpporg.github.io/libs/pratt/): A generic Pratt parser engine for C++20, with a decimal calculator built on it.
+- [trystero](https://webcpporg.github.io/libs/trystero/): Serverless WebRTC rooms for C++20, wire compatible with Trystero.
+- [wasi](https://webcpporg.github.io/libs/wasi/): Header-only helpers for C++ built as WebAssembly components: the HTTP handler a component exports on wasip2 and wasip3, and the macros a program writes its main between.
+- [xactor](https://webcpporg.github.io/libs/xactor/): A header-only, deterministic actor system: actors that handle one message at a time, with fuel per execution, timers and a lifecycle.
+- [xstate](https://webcpporg.github.io/libs/xstate/): A header-only port of XState's state machines and actors: machines read from XState's JSON config, stepped by XState's pure functions or run as actors on xactor.
+
+## Pages
+
+- [C++ for the web: browser, server and native - webcpp](https://webcpporg.github.io/): Header-only C++ libraries for the web: the same code runs in the browser with Emscripten, on servers as WASI WebAssembly containers, and natively.
+- [llms.txt and libraries.json, for AI agents - webcpp](https://webcpporg.github.io/ai/): What AI agents read to find webcpp's C++ libraries: llms.txt, a line for every library and page, and libraries.json, the catalogue. Integrations to come.
+- [Community: bring your C++ library to the web - webcpp](https://webcpporg.github.io/community/): How to take part in webcpp: the rules for contributing, the rulebook every library keeps, and how to bring a C++ library to the web, a port or your own.
+- [C++ for WebAssembly: Emscripten, WASI and wasmtime - webcpp](https://webcpporg.github.io/cpp/): Getting started with webcpp's C++ libraries: one program built for the browser with Emscripten, as a WASI component run by wasmtime, and natively.
+- [webcpp](https://webcpporg.github.io/docs/)
+- [Examples: C++ and JavaScript, step by step - webcpp](https://webcpporg.github.io/examples/): webcpp's examples, each to run live in the visualizer beside a page that explains it. The first, a C++ calculator in the browser, comes with the visualizer.
+- [Use C++ from JavaScript, in the browser - webcpp](https://webcpporg.github.io/javascript/): For JavaScript developers: use C++ compiled to WebAssembly, with WebRTC peer to peer rooms in the browser today; calling JavaScript from C++ is next.
+- [Header-only C++20 libraries for WebAssembly - webcpp](https://webcpporg.github.io/libraries/): Every webcpp library, as Boost lists its own: a Pratt parser, XState state machines, WebRTC rooms; each built for Emscripten, WASI or natively.
+- [Test matrix - webcpp](https://webcpporg.github.io/report/)
+- [Search webcpp's C++ libraries and docs - webcpp](https://webcpporg.github.io/search/): Search every page of webcpp, its libraries' guides and API references included, with Google's search restricted to this site. Results open on Google.
+
+## Data
+
+- [libraries.json](https://webcpporg.github.io/libraries.json): the catalogue of every library: its targets, its repository, its page and the original a port follows

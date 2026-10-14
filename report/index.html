@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Test matrix - webcpp</title>
+<style>
+:root {
+  --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --line: #d1d9e0; --raised: #f6f8fa;
+  --link: #0969da; --pass-bg: #d3f3dc; --pass-fg: #0f5a26; --fail-bg: #cf222e;
+  --fail-fg: #ffffff; --na-bg: #eceff2; --na-fg: #6e7781;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --line: #30363d; --raised: #151b23;
+    --link: #4493f8; --pass-bg: #163d24; --pass-fg: #7ee2a0; --fail-bg: #c4272a;
+    --fail-fg: #ffffff; --na-bg: #21262d; --na-fg: #8b949e;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+span.wbr::after { content: "\200B"; content: "\200B" / ""; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+}
+/* Only the sides: main and footer set their own top and bottom. */
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: 16px; padding-right: 16px; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); font-size: 13px; }
+code { overflow-wrap: anywhere; }
+.bar { background: var(--raised); border-bottom: 1px solid var(--line); }
+.bar nav {
+  display: flex; flex-wrap: wrap; gap: 4px 8px; padding-top: 10px; padding-bottom: 10px;
+  font-size: 14px;
+}
+.bar nav span { color: var(--muted); }
+.bar nav .brand { color: var(--fg); font-weight: 700; }
+main { padding-top: 28px; padding-bottom: 40px; }
+h1 { font-size: 26px; line-height: 1.25; margin: 0 0 14px; overflow-wrap: anywhere; }
+h1 code { font-size: 0.85em; }
+h2 { font-size: 18px; line-height: 1.3; margin: 32px 0 10px; overflow-wrap: anywhere; }
+h3 { font-size: 13px; margin: 16px 0 6px; color: var(--muted); }
+p { margin: 0 0 12px; }
+.verdict {
+  margin: 0 0 24px; padding: 10px 14px; border-radius: 6px; border-left: 4px solid var(--na-fg);
+  background: var(--raised);
+}
+.verdict.passing { border-left-color: var(--pass-fg); background: var(--pass-bg); }
+.verdict.failing { border-left-color: var(--fail-bg); }
+.problems ul { margin: 0 0 24px; padding-left: 20px; }
+.problems li { margin: 4px 0; overflow-wrap: anywhere; }
+/* The table scrolls inside its frame when it is wider than the page. */
+.scroll {
+  width: fit-content; max-width: 100%; overflow-x: auto; margin: 0 0 8px;
+  border: 1px solid var(--line); border-radius: 6px;
+}
+.matrix { border-collapse: separate; border-spacing: 0; }
+.matrix th, .matrix td {
+  padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap;
+}
+.matrix tbody tr:last-child > * { border-bottom: 0; }
+.matrix thead th {
+  background: var(--raised); color: var(--muted); font-size: 12px; font-weight: 600;
+  vertical-align: bottom;
+}
+.matrix .name {
+  position: sticky; left: 0; z-index: 1; background: var(--bg);
+  border-right: 1px solid var(--line);
+}
+.matrix thead .name { background: var(--raised); z-index: 2; }
+.matrix tbody .name { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+/* A long name wraps, so that the column stuck at the left leaves room for the lanes: a cell
+   ignores max-width, what it holds does not. */
+.matrix tbody .name > * {
+  display: block; width: max-content; max-width: 40vw; white-space: normal;
+  overflow-wrap: anywhere;
+}
+.matrix .type { color: var(--muted); font-size: 13px; }
+/* A lane's header wraps at a hyphen when its column is narrower than its name or toolset, so
+   that 9 lanes fit at desktop width without the table scrolling sideways: nowrap, the rule
+   above, would hold every header to its widest line's full width instead. */
+.matrix .lane {
+  text-align: center; font-family: var(--mono); color: var(--fg); white-space: normal;
+}
+.matrix .lane .toolset {
+  display: block; font: 400 11px/1.4 var(--mono); color: var(--muted);
+}
+.matrix .lane.empty, .matrix .lane.outside { color: var(--fail-bg); }
+.matrix .lane.empty::after, .matrix .lane.outside::after {
+  display: block; font: 700 10px/1.4 system-ui, sans-serif; letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.matrix .lane.empty::after { content: "empty"; }
+.matrix .lane.outside::after { content: "outside failure"; }
+.matrix td.cell {
+  padding: 0; min-width: 60px; text-align: center; font-size: 13px; font-weight: 600;
+  border-left: 1px solid var(--bg);
+}
+.matrix td.cell > * { display: block; padding: 6px 8px; }
+.matrix td.cell a { color: inherit; }
+.pass { background: var(--pass-bg); color: var(--pass-fg); }
+.fail { background: var(--fail-bg); color: var(--fail-fg); }
+.na { background: var(--na-bg); color: var(--na-fg); font-weight: 400; }
+/* On a phone, each row is a card: its name, its type, and a chip per lane that names the lane
+   (and its mark, when it built nothing or failed outside its tests). The header row is still
+   there for a screen reader, which the explicit roles keep reading as a table. */
+@media (max-width: 600px) {
+  .scroll { width: auto; overflow: visible; }
+  .matrix, .matrix tbody { display: block; }
+  .matrix thead {
+    position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+  .matrix tbody tr {
+    display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .matrix tbody tr:last-child { border-bottom: 0; }
+  .matrix tbody th, .matrix tbody td { display: block; padding: 0; border: 0; }
+  .matrix tbody .name {
+    position: static; flex: 0 0 100%; background: none; white-space: normal; border: 0;
+  }
+  .matrix tbody .name > * { width: auto; max-width: none; }
+  .matrix .type { flex: 0 0 100%; margin-top: -6px; font-size: 12px; }
+  .matrix td.cell {
+    display: inline-flex; min-width: 0; border-radius: 4px; font-size: 12px;
+    text-align: left; white-space: nowrap;
+  }
+  .matrix td.cell::before {
+    content: attr(data-lane) ":"; padding: 2px 0 2px 8px; font-weight: 400;
+  }
+  .matrix td.cell[data-note]::before {
+    content: attr(data-lane) " (" attr(data-note) "):";
+  }
+  .matrix td.cell > * { padding: 2px 8px 2px 5px; }
+}
+.tag {
+  display: inline-block; min-width: 72px; padding: 1px 8px; border-radius: 4px;
+  text-align: center; font-size: 12px; font-weight: 600; line-height: 1.6;
+  vertical-align: 0.1em;
+}
+.legend dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; margin: 0; }
+.legend dl div { display: contents; }
+.legend dd { margin: 0; color: var(--muted); font-size: 14px; }
+.build { margin-top: 28px; border-top: 1px solid var(--line); }
+.build h2 { margin-top: 20px; font-size: 15px; font-weight: 600; }
+.build h2 code { font-size: 13px; }
+.facts {
+  display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px;
+  margin: 0 0 4px; font-size: 14px;
+}
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+/* Output keeps its lines, so that a compiler's caret stays under what it points at: a long line
+   scrolls inside its box. */
+pre {
+  margin: 0; padding: 12px 14px; background: var(--raised); border: 1px solid var(--line);
+  border-radius: 6px; white-space: pre; overflow-x: auto; line-height: 1.45;
+}
+details { margin-top: 12px; }
+summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+summary + pre { margin-top: 6px; }
+footer {
+  border-top: 1px solid var(--line); padding: 16px 0 28px; color: var(--muted);
+  font-size: 13px;
+}
+</style>
+<meta name="robots" content="noindex">
+</head>
+<body>
+<header class="bar"><nav class="wrap"><a class="brand" href="../">webcpp</a><span>/</span><a href="index.html">test matrix</a></nav></header>
+<main class="wrap">
+<h1>Test matrix</h1>
+<p class="verdict passing"><strong>Passing.</strong> Every test and example built in 15 lanes passed.</p>
+<div class="scroll">
+<!-- [html-validate-disable-block no-redundant-role: the explicit roles keep the matrix a table for a screen reader when a phone lays its rows out as cards] -->
+<table class="matrix" role="table">
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="name">Library</th><th scope="col" role="columnheader" class="lane" data-lane="gcc-14">gcc-14</th><th scope="col" role="columnheader" class="lane" data-lane="gcc-15">gcc-15</th><th scope="col" role="columnheader" class="lane" data-lane="clang-linux-18">clang-linux-18</th><th scope="col" role="columnheader" class="lane" data-lane="clang-linux-22">clang-linux-22</th><th scope="col" role="columnheader" class="lane" data-lane="clang-darwin-17">clang-darwin-17</th><th scope="col" role="columnheader" class="lane" data-lane="msvc-14.3">msvc-14.3</th><th scope="col" role="columnheader" class="lane" data-lane="msvc-14.5">msvc-14.5</th><th scope="col" role="columnheader" class="lane" data-lane="emscripten">emscripten<span class="toolset">emscripten-6.0.11</span></th><th scope="col" role="columnheader" class="lane" data-lane="wasip2">wasip2<span class="toolset">clang-linux-wasip2</span></th><th scope="col" role="columnheader" class="lane" data-lane="wasip3">wasip3<span class="toolset">clang-linux-wasip3</span></th><th scope="col" role="columnheader" class="lane" data-lane="emscripten.document.js">emscripten.<span class="wbr"></span>document.<span class="wbr"></span>js<span class="toolset">emscripten-6.0.11</span></th><th scope="col" role="columnheader" class="lane" data-lane="emscripten.trystero.interop">emscripten.<span class="wbr"></span>trystero.<span class="wbr"></span>interop<span class="toolset">emscripten-6.0.11</span></th><th scope="col" role="columnheader" class="lane" data-lane="native.trystero.interop">native.<span class="wbr"></span>trystero.<span class="wbr"></span>interop<span class="toolset">clang-linux-18</span></th><th scope="col" role="columnheader" class="lane" data-lane="wasip2.wasi.http">wasip2.<span class="wbr"></span>wasi.<span class="wbr"></span>http<span class="toolset">clang-linux-wasip2</span></th><th scope="col" role="columnheader" class="lane" data-lane="wasip3.wasi.http">wasip3.<span class="wbr"></span>wasi.<span class="wbr"></span>http<span class="toolset">clang-linux-wasip3</span></th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="config.html">config</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="emscripten"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip2"><a href="config.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3"><a href="config.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten.document.js" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="emscripten.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="native.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip2.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="document.html">document</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="emscripten"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip2"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3"><a href="document.html">pass</a></td><td role="cell" class="cell pass" data-lane="emscripten.document.js"><a href="document.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="native.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip2.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="idna.html">idna</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="emscripten"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip2"><a href="idna.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3"><a href="idna.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten.document.js" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="emscripten.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="native.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip2.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="lexical.html">lexical</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="emscripten"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip2"><a href="lexical.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3"><a href="lexical.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten.document.js" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="emscripten.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="native.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip2.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="pratt.html">pratt</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="emscripten"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip2"><a href="pratt.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3"><a href="pratt.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten.document.js" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="emscripten.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="native.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip2.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="trystero.html">trystero</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="trystero.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="trystero.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="trystero.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="trystero.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="trystero.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="trystero.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="trystero.html">pass</a></td><td role="cell" class="cell pass" data-lane="emscripten"><a href="trystero.html">pass</a></td><td role="cell" class="cell na" data-lane="wasip2" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="emscripten.document.js" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell pass" data-lane="emscripten.trystero.interop"><a href="trystero.html">pass</a></td><td role="cell" class="cell pass" data-lane="native.trystero.interop"><a href="trystero.html">pass</a></td><td role="cell" class="cell na" data-lane="wasip2.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="wasi.html">wasi</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="wasi.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="wasi.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="wasi.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="wasi.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="wasi.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="wasi.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="wasi.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell pass" data-lane="wasip2"><a href="wasi.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3"><a href="wasi.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten.document.js" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="emscripten.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="native.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell pass" data-lane="wasip2.wasi.http"><a href="wasi.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3.wasi.http"><a href="wasi.html">pass</a></td></tr>
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="xactor.html">xactor</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="xactor.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="xactor.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="xactor.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="xactor.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="xactor.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="xactor.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="xactor.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell pass" data-lane="wasip2"><a href="xactor.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3"><a href="xactor.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten.document.js" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="emscripten.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="native.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip2.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td></tr>
+<tr role="row"><th scope="row" role="rowheader" class="name"><a href="xstate.html">xstate</a></th><td role="cell" class="cell pass" data-lane="gcc-14"><a href="xstate.html">pass</a></td><td role="cell" class="cell pass" data-lane="gcc-15"><a href="xstate.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-18"><a href="xstate.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-linux-22"><a href="xstate.html">pass</a></td><td role="cell" class="cell pass" data-lane="clang-darwin-17"><a href="xstate.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.3"><a href="xstate.html">pass</a></td><td role="cell" class="cell pass" data-lane="msvc-14.5"><a href="xstate.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell pass" data-lane="wasip2"><a href="xstate.html">pass</a></td><td role="cell" class="cell pass" data-lane="wasip3"><a href="xstate.html">pass</a></td><td role="cell" class="cell na" data-lane="emscripten.document.js" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="emscripten.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="native.trystero.interop" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip2.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td><td role="cell" class="cell na" data-lane="wasip3.wasi.http" title="Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it."><span>n/a</span></td></tr>
+</tbody>
+</table>
+</div>
+<section class="legend">
+<h2>Legend</h2>
+<dl>
+<div><dt><span class="tag pass">pass</span></dt><dd>Every build of it in the lane passed.</dd></div>
+<div><dt><span class="tag fail">compile</span></dt><dd>The compiler failed.</dd></div>
+<div><dt><span class="tag fail">compiled</span></dt><dd>The source compiled, and the test expects it not to.</dd></div>
+<div><dt><span class="tag fail">link</span></dt><dd>The linker failed.</dd></div>
+<div><dt><span class="tag fail">linked</span></dt><dd>The program linked, and the test expects it not to.</dd></div>
+<div><dt><span class="tag fail">build</span></dt><dd>A step other than compiling, linking and running failed.</dd></div>
+<div><dt><span class="tag fail">run</span></dt><dd>The program exited with a status other than 0, the example printed other than its .expected file, the served component answered other than its .expected file, or the script that drives the program exited with a status other than 0.</dd></div>
+<div><dt><span class="tag fail">ran</span></dt><dd>The program exited with status 0, and the test expects another status.</dd></div>
+<div><dt><span class="tag fail">not run</span></dt><dd>b2 did not take it to the end: a target it needs failed, or the lane was not built from scratch (b2 -a).</dd></div>
+<div><dt><span class="tag na">n/a</span></dt><dd>Not built in this lane, as when it does not declare the lane&#x27;s target, or when a lane of its own runs it.</dd></div>
+</dl>
+</section>
+</main>
+<footer><div class="wrap">Copyright (c) 2026 WebCpp.org &middot; <a href="https://github.com/webcpporg/">github.com/webcpporg</a></div></footer>
+</body>
+</html>
