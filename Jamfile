@@ -91,59 +91,92 @@ actions test
     $(TYPECHECK)
 }
 
-# Every page of bin/site/, the superproject's, is valid HTML: html-validate, run twice, never
-# writing a configuration into bin/site itself. The site's own pages (every *.html outside
-# docs/ and libs/) take every rule of .htmlvalidate.json's html-validate:recommended; docs/ and
-# libs/*/, the libraries' Asciidoctor pages, take .htmlvalidate.docs.json's, with no-trailing-
-# whitespace off there alone, since a listing of pratt's guide shows literal trailing whitespace
-# and tabs as the parser's own example output (libs/pratt/doc/pratt.adoc), inside a <pre> the rule
-# has no option to tell from formatting; a page outside docs/ and libs/ with trailing whitespace
-# still fails. A dependency of b2 site's last step (tools/site/site.jam), after site-pages has
-# moved bin/site.tmp/ onto bin/site/, so a page that is not valid HTML fails the build, naming the
+# Every page of bin/site/, the superproject's, is valid HTML: html-validate, run
+# twice, never
+# writing a configuration into bin/site itself. The site's own pages (every
+# *.html outside
+# docs/ and libs/) take every rule of htmlvalidate.json's
+# html-validate:recommended; docs/ and
+# libs/*/, the libraries' Asciidoctor pages, take htmlvalidate.docs.json's, with
+# no-trailing-
+# whitespace off there alone, since a listing of pratt's guide shows literal
+# trailing whitespace
+# and tabs as the parser's own example output (libs/pratt/doc/pratt.adoc),
+# inside a <pre> the rule
+# has no option to tell from formatting; a page outside docs/ and libs/ with
+# trailing whitespace
+# still fails. A dependency of b2 site's last step (tools/site/site.jam), after
+# site-pages has
+# moved bin/site.tmp/ onto bin/site/, so a page that is not valid HTML fails the
+# build, naming the
 # file and this rule.
 #
-# Neither config's own JSON holds a comment, so each rule either one turns off is explained here:
+# Neither config's own JSON holds a comment, so each rule either one turns off
+# is explained here:
 #
-#   doctype-style            (site's own pages) the shell writes `<!doctype html>`
-#                            (src/server.tsx), HTML5's own spelling; recommended wants it
+#   doctype-style            (site's own pages) the shell writes `<!doctype
+#                            html>`
+#                            (src/server.tsx), HTML5's own spelling; recommended
+#                            wants it
 #                            uppercase, a style choice.
-#   void-style               (both: the chrome header is on every page) React serialises a void
-#                            element self-closed, `<img/>` (the logo); HTML5 reads that as
+#   void-style               (both: the chrome header is on every page) React
+#                            serialises a void
+#                            element self-closed, `<img/>` (the logo); HTML5
+#                            reads that as
 #                            `<img>`, a style choice.
-#   no-inline-style          (both, for two different values no static sheet can hold) the site's
-#                            own pages: React's hydration-fade overlay (opacity, transition);
-#                            docs/ and libs/: a table's column widths, which cols computes per
+#   no-inline-style          (both, for two different values no static sheet can
+#                            hold) the site's
+#                            own pages: React's hydration-fade overlay (opacity,
+#                            transition);
+#                            docs/ and libs/: a table's column widths, which
+#                            cols computes per
 #                            table (postprocess.mjs).
-#   attribute-boolean-style  (site's own pages) React writes a boolean attribute as `attr=""`
-#                            (the search form's `required`); HTML5 reads that as the bare
+#   attribute-boolean-style  (site's own pages) React writes a boolean attribute
+#                            as `attr=""`
+#                            (the search form's `required`); HTML5 reads that as
+#                            the bare
 #                            attribute, a style choice.
-#   attr-case                (site's own pages) React keeps the DOM property's spelling for some
-#                            attributes it writes verbatim, `autoComplete`, `spellCheck`
-#                            (search_form.tsx); HTML attributes are read case-insensitively, a
+#   attr-case                (site's own pages) React keeps the DOM property's
+#                            spelling for some
+#                            attributes it writes verbatim, `autoComplete`,
+#                            `spellCheck`
+#                            (search_form.tsx); HTML attributes are read
+#                            case-insensitively, a
 #                            style choice.
-#   form-dup-name            (site's own pages) the search form's two fields share name="q" on
-#                            purpose (search_form.tsx): a hidden one restricts the search to the
-#                            site, the reader's own holds the terms, and Google joins the two
+#   form-dup-name            (site's own pages) the search form's two fields
+#                            share name="q" on
+#                            purpose (search_form.tsx): a hidden one restricts
+#                            the search to the
+#                            site, the reader's own holds the terms, and Google
+#                            joins the two
 #                            into one query.
-#   no-trailing-whitespace   (docs/ and libs/ alone) pratt's own example output, above.
+#   no-trailing-whitespace   (docs/ and libs/ alone) pratt's own example output,
+#                            above.
 notfile valid-html : @valid-html
   : : <dependency>node-modules <dependency>/webcpp//site-pages <webcpp-boost-check>off ;
 
 rule valid-html ( targets * : sources * : properties * )
 {
     HTML_VALIDATE on $(targets) = [ path.native $(.here)/node_modules/.bin/html-validate ] ;
-    CONFIG on $(targets) = [ path.native $(.here)/.htmlvalidate.json ] ;
-    DOCS_CONFIG on $(targets) = [ path.native $(.here)/.htmlvalidate.docs.json ] ;
+    CONFIG on $(targets) = [ path.native $(.here)/htmlvalidate.json ] ;
+    DOCS_CONFIG on $(targets) = [ path.native $(.here)/htmlvalidate.docs.json ] ;
     PAGES on $(targets) = [ path.native $(.root)/bin/site ] ;
 }
 
-# find -H, which follows bin/site, a link b2 site swaps onto each build (tools/swap.mjs), where a
-# plain find would stop at the link and find no page, so that the check would pass on nothing;
-# find, never a glob of b2's or the shell's, so a page's path that holds a space is one argument;
-# -print0 piped to xargs -0, never -exec ... +, since find's own exit status says nothing of
-# html-validate's: with -exec, a page that fails validation would still leave find, and so this
-# action, exit 0. Each pass runs only once there is a page for it, so what finds none (every page
-# in a scratch fixture under docs/, say) invokes html-validate with no file and no false "no page
+# find -H, which follows bin/site, a link b2 site swaps onto each build
+# (tools/swap.mjs), where a
+# plain find would stop at the link and find no page, so that the check would
+# pass on nothing;
+# find, never a glob of b2's or the shell's, so a page's path that holds a space
+# is one argument;
+# -print0 piped to xargs -0, never -exec ... +, since find's own exit status
+# says nothing of
+# html-validate's: with -exec, a page that fails validation would still leave
+# find, and so this
+# action, exit 0. Each pass runs only once there is a page for it, so what finds
+# none (every page
+# in a scratch fixture under docs/, say) invokes html-validate with no file and
+# no false "no page
 # given" fault.
 actions valid-html
 {

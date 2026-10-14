@@ -74,4 +74,4 @@ jobs:
       - name: Every page is valid HTML
         run: |
           find "$RUNNER_TEMP/site/out" -name '*.html' -print0 \
-            | xargs -0 node_modules/.bin/html-validate --config .htmlvalidate.json
+            | xargs -0 node_modules/.bin/html-validate --config htmlvalidate.json
