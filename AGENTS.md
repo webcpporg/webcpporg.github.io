@@ -1,7 +1,7 @@
 # Working on the site
 
-Read the superproject's `AGENTS.md` first. This file holds only what is
-specific to this repository.
+Read the superproject's `CODING-GUIDELINES.md` and its `AGENTS.md` first.
+This file holds only what is specific to this repository.
 
 - Pages are written in OpenUI Lang, under `pages/`.
 - Components are React, each with its props validated by a zod schema: the
