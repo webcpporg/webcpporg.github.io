@@ -82,6 +82,13 @@ test("the search page is a Google search restricted to the site", () => {
     assert.match(form, /<input[^>]* type="search"[^>]* name="q"/)
 })
 
+test('the community page links the coding guidelines as the rules, beside CONTRIBUTING.md and AGENTS.md', () => {
+    const main = pageAt(out, 'community/').match(/<main>[\s\S]*<\/main>/)[0]
+    for (const file of ['CONTRIBUTING.md', 'CODING-GUIDELINES.md', 'AGENTS.md']) {
+        assert.ok(main.includes(`href="https://github.com/webcpporg/webcpp/blob/main/${file}"`), file)
+    }
+})
+
 test("every page carries its OpenUI Lang, and its body holds nothing but the shell and OpenUI's tree", () => {
     for (const {file, path} of pages) {
         const html = pageAt(out, path)

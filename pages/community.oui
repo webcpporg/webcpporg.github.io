@@ -4,7 +4,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // https://www.boost.org/LICENSE_1_0.txt)
 
-root = Page("Community: bring your C++ library to the web", "How to take part in webcpp: the rules for contributing, the rulebook every library keeps, and how to bring a C++ library to the web, a port or your own.", [intro, contributing, rulebook, bring])
+root = Page("Community: bring your C++ library to the web", "How to take part in webcpp: the rules for contributing, the guidelines every library keeps, and how to bring a C++ library to the web, a port or your own.", [intro, contributing, rulebook, bring])
 
 intro = Text("webcpp is open to C++, JavaScript, crypto and AI developers who build decentralized applications for the web. The same rules apply whatever agent system you use.")
 
@@ -12,9 +12,10 @@ contributing = Section("Contributing", [contributingText, contributingLink])
 contributingText = Text("CONTRIBUTING.md gives the rules for contributors: what webcpp is, the rules every library keeps, how a change is made and reviewed, and how commits are written.")
 contributingLink = Link("CONTRIBUTING.md", "https://github.com/webcpporg/webcpp/blob/main/CONTRIBUTING.md")
 
-rulebook = Section("The rulebook", [rulebookText, rulebookLink])
-rulebookText = Text("AGENTS.md is the rulebook for porting a library to webcpp, which coding agents and people follow alike: what a library builds on, how it is tested on every target, and how it is documented.")
-rulebookLink = Link("AGENTS.md", "https://github.com/webcpporg/webcpp/blob/main/AGENTS.md")
+rulebook = Section("The rulebook", [rulebookText, guidelinesLink, agentsLink])
+rulebookText = Text("CODING-GUIDELINES.md holds the rules for porting a library to webcpp and every decision of its design, which coding agents and people follow alike: what a library builds on, how it is tested on every target, and how it is documented. AGENTS.md says how to work in the tree: the build, the lanes, the documentation and the releases.")
+guidelinesLink = Link("CODING-GUIDELINES.md", "https://github.com/webcpporg/webcpp/blob/main/CODING-GUIDELINES.md")
+agentsLink = Link("AGENTS.md", "https://github.com/webcpporg/webcpp/blob/main/AGENTS.md")
 
 bring = Section("Bringing a library", [bringText, bringLink, issues])
 bringText = Text("A library joins webcpp through an issue that proposes it: what it ports, or what it does, and why it belongs on the web.")
