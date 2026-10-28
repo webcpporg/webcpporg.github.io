@@ -1,0 +1,660 @@
+/*
+ * Copyright (c) 2026 WebCpp.org
+ *
+ * Distributed under the Boost Software License, Version 1.0. (See
+ * accompanying file LICENSE_1_0.txt or copy at
+ * https://www.boost.org/LICENSE_1_0.txt)
+ */
+
+/*
+ * The site's theme, as the owner chose it (Task 8, design/home-mockup.html): Apple's restraint,
+ * large type, much space, one accent, violet, and motion only where it explains. Written for a
+ * 360 px screen first, then widened at 768, 1280 and 1440 px; light and dark. Its tokens, light,
+ * and the header and the band are chrome.css's, which every page links first: the libraries'
+ * pages and the docs index, whose own style is Asciidoctor's, link it alone.
+ */
+
+:root {
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #000000;
+        --surface: #1c1c1e;
+        --text: #f5f5f7;
+        --muted: #a1a1a6;
+        --rule: #38383a;
+        /* 7.63 to 1 on black, 6.18 on the surface; the fill under white text 5.86. */
+        --accent: #9d8cff;
+        --accent-fill: #6246ea;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--background);
+    color: var(--text);
+    font: 17px/1.5 var(--font);
+    overflow-wrap: break-word;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+code,
+pre {
+    font-family: var(--mono);
+    font-size: 0.88em;
+}
+
+noscript {
+    display: block;
+    padding: 8px var(--gutter);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 14px;
+}
+
+/* The page. */
+
+main {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 32px var(--gutter) 48px;
+}
+
+h1,
+h2 {
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+}
+
+h1 {
+    margin: 0 0 24px;
+    font-size: 36px;
+}
+
+h2 {
+    margin: 0 0 12px;
+    font-size: 28px;
+}
+
+main p {
+    max-width: 68ch;
+    text-wrap: pretty;
+}
+
+/* Each section of a page opens under a rule, after much space. */
+main > section {
+    margin-top: 48px;
+    padding-top: 48px;
+    border-top: 1px solid var(--rule);
+}
+
+/* On the opening page, the one a Hero opens, a section's text is its lede, quieter than its heading. */
+main:has(> .hero) > section > p {
+    color: var(--muted);
+}
+
+/* A link that stands as a block of the page is a line of its own, so that two never run together. */
+main > a,
+section > a {
+    display: block;
+    width: fit-content;
+    margin: 0 0 12px;
+}
+
+pre {
+    margin: 0 0 16px;
+    padding: 16px;
+    overflow-x: auto;
+    border-radius: 12px;
+    background: var(--surface);
+    line-height: 1.45;
+}
+
+/* A command or a name in a sentence is never broken across lines. */
+main p code,
+main li code {
+    padding: 0.1em 0.3em;
+    border-radius: 4px;
+    background: var(--surface);
+    white-space: nowrap;
+}
+
+/*
+ * The hero: the mark above the heading on a phone, beside it from 768px. As the page opens, the
+ * mark's arms close round its angle brackets and its globe, which appear inside them: C++
+ * embracing the web. The arms stay opaque, so that nothing shows through the joints' seams.
+ */
+
+.hero {
+    display: grid;
+    gap: 28px;
+    padding: 8px 0 8px;
+}
+
+.hero-figure {
+    order: -1;
+}
+
+.hero h1 {
+    margin: 0 0 16px;
+    font-size: 44px;
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+}
+
+.hero .subtitle {
+    max-width: 34em;
+    margin: 0 0 28px;
+    color: var(--muted);
+    font-size: 19px;
+    line-height: 1.4;
+}
+
+.hero .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0;
+}
+
+.hero .actions a {
+    padding: 11px 22px;
+    border-radius: 980px;
+    background: var(--accent-fill);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.hero .actions a + a {
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--accent);
+    color: var(--accent);
+}
+
+.hero .actions a:hover {
+    text-decoration: none;
+    filter: brightness(1.1);
+}
+
+.mark {
+    display: block;
+    overflow: visible;
+}
+
+.mark .ink {
+    stroke: var(--text);
+}
+
+.mark .acc {
+    stroke: var(--accent);
+}
+
+.hero .mark {
+    width: 96px;
+    height: 96px;
+}
+
+.mark.opening .arms,
+.mark.opening .angles,
+.mark.opening .globe {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+}
+
+.mark.opening .arms {
+    animation: embrace 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.mark.opening .angles,
+.mark.opening .globe {
+    animation: appear 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes embrace {
+    from {
+        transform: scaleX(1.25);
+    }
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mark.opening .arms,
+    .mark.opening .angles,
+    .mark.opening .globe {
+        animation: none;
+    }
+}
+
+/* The targets: one rail runs through the three, the same code reaching each; down on a phone. */
+
+.targets {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.targets li {
+    position: relative;
+    padding: 0 0 28px 32px;
+}
+
+.targets li:last-child {
+    padding-bottom: 0;
+}
+
+.targets li::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 0;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.targets li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 19px;
+    bottom: -8px;
+    left: 5px;
+    width: 1px;
+    background: var(--rule);
+}
+
+.targets strong {
+    display: block;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.targets p {
+    margin: 2px 0 0;
+    color: var(--muted);
+}
+
+/* The doors: three large lines, each row a link as wide as the page. */
+
+.doors {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.doors li {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    padding: 20px 0;
+}
+
+.doors li + li {
+    border-top: 1px solid var(--rule);
+}
+
+.doors li:last-child {
+    padding-bottom: 0;
+}
+
+.doors a {
+    color: var(--text);
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.doors a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.doors a:hover,
+.doors li:hover a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.doors p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.roadmap {
+    max-width: 68ch;
+    margin: 0 0 16px;
+    padding-left: 20px;
+}
+
+.roadmap li + li {
+    margin-top: 6px;
+}
+
+/* A list of libraries: each name on its line, its description under it. */
+
+.library-list {
+    max-width: 68ch;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.library-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.library-list li:first-child {
+    border-top: 1px solid var(--rule);
+}
+
+.library-list a {
+    font-weight: 600;
+}
+
+.library-list p {
+    margin: 2px 0 0;
+    color: var(--muted);
+}
+
+/* The search box: the field takes the row's width, the button keeps its own. */
+
+.search {
+    max-width: 640px;
+    margin: 0 0 24px;
+}
+
+.search label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.search-row {
+    display: flex;
+    gap: 8px;
+}
+
+.search input[type="search"] {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 16px;
+    border: 1px solid var(--rule);
+    border-radius: 980px;
+    background: var(--background);
+    color: var(--text);
+    font: inherit;
+}
+
+.search input[type="search"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.search button {
+    padding: 10px 20px;
+    border: 0;
+    border-radius: 980px;
+    background: var(--accent-fill);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.search button:hover {
+    filter: brightness(1.1);
+}
+
+.search button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/*
+ * The libraries' table: on a phone each row is a block, its cells stacked under the library's
+ * name, each labelled; from 768 px a table, which scrolls inside its box rather than widen the page.
+ */
+
+.table {
+    margin: 0 0 16px;
+    overflow-x: auto;
+}
+
+.libraries {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+.libraries thead {
+    display: none;
+}
+
+.libraries tr,
+.libraries th,
+.libraries td {
+    display: block;
+}
+
+.libraries tr {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.libraries th,
+.libraries td {
+    padding: 2px 0;
+    text-align: left;
+}
+
+.libraries tbody th {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.libraries td[data-label]::before {
+    content: attr(data-label) ": ";
+    color: var(--muted);
+}
+
+footer.site {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 0 var(--gutter) 40px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* The rule is the paragraph's, so that it spans the text's width, as main's content does. */
+footer.site p {
+    margin: 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+}
+
+@media (min-width: 768px) {
+    main {
+        padding-top: 48px;
+    }
+
+    h1 {
+        font-size: 44px;
+    }
+
+    h2 {
+        font-size: 36px;
+    }
+
+    main > section {
+        margin-top: 64px;
+        padding-top: 64px;
+    }
+
+    .hero {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 48px;
+        padding: 24px 0 24px;
+    }
+
+    .hero-figure {
+        order: 0;
+    }
+
+    .hero h1 {
+        font-size: 64px;
+    }
+
+    .hero .subtitle {
+        font-size: 22px;
+    }
+
+    .hero .mark {
+        width: 200px;
+        height: 200px;
+    }
+
+    .targets {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+    }
+
+    .targets li {
+        padding: 32px 0 0;
+    }
+
+    .targets li::before {
+        top: 0;
+    }
+
+    .targets li:not(:last-child)::after {
+        top: 5px;
+        right: -32px;
+        bottom: auto;
+        left: 11px;
+        width: auto;
+        height: 1px;
+    }
+
+    .doors li {
+        grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+        align-items: baseline;
+        gap: 32px;
+        padding: 28px 0;
+    }
+
+    .doors li:last-child {
+        padding-bottom: 0;
+    }
+
+    .doors a {
+        font-size: 36px;
+    }
+
+    .doors p {
+        font-size: 19px;
+    }
+
+    .libraries thead {
+        display: table-header-group;
+    }
+
+    .libraries tr {
+        display: table-row;
+        padding: 0;
+    }
+
+    .libraries th,
+    .libraries td {
+        display: table-cell;
+        padding: 10px 16px 10px 0;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+    }
+
+    .libraries thead th {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .libraries tbody th {
+        font-size: inherit;
+    }
+
+    .libraries td[data-label]::before {
+        content: none;
+    }
+}
+
+@media (min-width: 1280px) {
+    .hero {
+        padding: 48px 0 40px;
+    }
+
+    .hero h1 {
+        font-size: 84px;
+    }
+
+    .hero .subtitle {
+        font-size: 24px;
+    }
+
+    .hero .mark {
+        width: 260px;
+        height: 260px;
+    }
+}
+
+@media (min-width: 1440px) {
+    body {
+        font-size: 18px;
+    }
+
+    .hero h1 {
+        font-size: 88px;
+    }
+}

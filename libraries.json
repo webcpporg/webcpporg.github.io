@@ -1,0 +1,165 @@
+[
+    {
+        "category": [
+            "Miscellaneous"
+        ],
+        "description": "webcpp's configuration, which every webcpp library includes first: the target a program is built for, whether webcpp has exceptions, and webcpp's version.",
+        "key": "config",
+        "name": "config",
+        "page": "libs/config/",
+        "port_of": null,
+        "repository": "https://github.com/webcpporg/config",
+        "targets": [
+            "emscripten",
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    },
+    {
+        "category": [
+            "Data structures",
+            "Parsing"
+        ],
+        "description": "A JSON document for C++20 that behaves as JavaScript does, in one relocatable image.",
+        "key": "document",
+        "name": "document",
+        "page": "libs/document/",
+        "port_of": null,
+        "repository": "https://github.com/webcpporg/document",
+        "targets": [
+            "emscripten",
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    },
+    {
+        "category": [
+            "String"
+        ],
+        "description": "IDNA2008 and UTS 46 for C++20: Punycode, ToASCII and ToUnicode, and label validity, over generated Unicode 17.0 tables.",
+        "key": "idna",
+        "name": "idna",
+        "page": "libs/idna/",
+        "port_of": null,
+        "repository": "https://github.com/webcpporg/idna",
+        "targets": [
+            "emscripten",
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    },
+    {
+        "category": [
+            "Parsing",
+            "String"
+        ],
+        "description": "Validators and Boost.URL grammar rules for the string formats of JSON Schema, for C++20.",
+        "key": "lexical",
+        "name": "lexical",
+        "page": "libs/lexical/",
+        "port_of": null,
+        "repository": "https://github.com/webcpporg/lexical",
+        "targets": [
+            "emscripten",
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    },
+    {
+        "category": [
+            "Parsing"
+        ],
+        "description": "A generic Pratt parser engine for C++20, with a decimal calculator built on it.",
+        "key": "pratt",
+        "name": "pratt",
+        "page": "libs/pratt/",
+        "port_of": null,
+        "repository": "https://github.com/webcpporg/pratt",
+        "targets": [
+            "emscripten",
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    },
+    {
+        "category": [
+            "Concurrent",
+            "IO"
+        ],
+        "description": "Serverless WebRTC rooms for C++20, wire compatible with Trystero.",
+        "key": "trystero",
+        "name": "trystero",
+        "page": "libs/trystero/",
+        "port_of": {
+            "language": "JavaScript",
+            "licence": "MIT",
+            "name": "Trystero",
+            "url": "https://github.com/dmotz/trystero",
+            "version": "0.26.0"
+        },
+        "repository": "https://github.com/webcpporg/trystero",
+        "targets": [
+            "emscripten",
+            "native"
+        ]
+    },
+    {
+        "category": [
+            "System"
+        ],
+        "description": "Header-only helpers for C++ built as WebAssembly components: the HTTP handler a component exports on wasip2 and wasip3, and the macros a program writes its main between.",
+        "key": "wasi",
+        "name": "wasi",
+        "page": "libs/wasi/",
+        "port_of": null,
+        "repository": "https://github.com/webcpporg/wasi",
+        "targets": [
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    },
+    {
+        "category": [
+            "Concurrent"
+        ],
+        "description": "A header-only, deterministic actor system: actors that handle one message at a time, with fuel per execution, timers and a lifecycle.",
+        "key": "xactor",
+        "name": "xactor",
+        "page": "libs/xactor/",
+        "port_of": null,
+        "repository": "https://github.com/webcpporg/xactor",
+        "targets": [
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    },
+    {
+        "category": [
+            "State"
+        ],
+        "description": "A header-only port of XState's state machines and actors: machines read from XState's JSON config, stepped by XState's pure functions or run as actors on xactor.",
+        "key": "xstate",
+        "name": "xstate",
+        "page": "libs/xstate/",
+        "port_of": {
+            "language": "TypeScript",
+            "licence": "MIT",
+            "name": "XState",
+            "url": "https://github.com/statelyai/xstate",
+            "version": "5.33.2"
+        },
+        "repository": "https://github.com/webcpporg/xstate",
+        "targets": [
+            "native",
+            "wasip2",
+            "wasip3"
+        ]
+    }
+]

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<!--
+  Copyright (c) 2026 WebCpp.org
+
+  Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file LICENSE_1_0.txt or copy at
+  https://www.boost.org/LICENSE_1_0.txt)
+
+  The social card of a page, 1200 by 630: tools/cards.mjs draws assets/logo.svg inside the
+  element `logo` and sets the page's title in the element `title`, wrapped into lines that fit
+  between the margins, then renders it to PNG with Inter, the one font it loads. The mark's
+  colours are the light theme's, set here: resvg reads no media query.
+-->
+<style>
+.ink { stroke: #1d1d1f; }
+.acc { stroke: #5b3fd9; }
+</style>
+<rect width="1200" height="630" fill="#ffffff"/>
+<svg id="logo" x="74" y="64" width="96" height="96" viewBox="0 0 64 64"></svg>
+<text x="196" y="129" style="fill: #1d1d1f; font-family: Inter; font-size: 52px; font-weight: 600; letter-spacing: -1px">webcpp</text>
+<text id="title" x="80" y="372" style="fill: #1d1d1f; font-family: Inter; font-size: 72px; font-weight: 700; letter-spacing: -1px">The page's title</text>
+<rect x="80" y="534" width="96" height="8" rx="4" fill="#5b3fd9"/>
+</svg>
